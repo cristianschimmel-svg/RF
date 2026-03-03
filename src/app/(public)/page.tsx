@@ -76,11 +76,20 @@ export default async function HomePage() {
               title="Tipo de Cambio"
               icon={<DollarSign className="w-4 h-4" />}
               headerAction={
-                overview.dollarMetrics.brechaBlue && (
-                  <Badge variant="accent" size="sm">
-                    Brecha {overview.dollarMetrics.brechaBlue.toFixed(1)}%
-                  </Badge>
-                )
+                <div className="flex items-center gap-2">
+                  {overview.dollarMetrics.brechaBlue && (
+                    <Badge variant="accent" size="sm">
+                      Brecha {overview.dollarMetrics.brechaBlue.toFixed(1)}%
+                    </Badge>
+                  )}
+                  <Link
+                    href="/indicadores/dolar"
+                    className="text-xs text-accent hover:text-accent-dark flex items-center gap-1"
+                  >
+                    Ver más
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               }
             >
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -106,23 +115,32 @@ export default async function HomePage() {
 
             {/* 5. Tabs for BCRA Indicators - Inflación, Tasas, Actividad */}
             <Card className="p-3 sm:p-4">
-              <Tabs defaultValue="inflacion">
-                <TabsList className="flex-wrap">
-                  <TabsTrigger value="inflacion" className="text-xs sm:text-sm">
-                    <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
-                    <span className="hidden xs:inline">Inflación</span>
-                    <span className="xs:hidden">Infl.</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="tasas" className="text-xs sm:text-sm">
-                    <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
-                    Tasas
-                  </TabsTrigger>
-                  <TabsTrigger value="actividad" className="text-xs sm:text-sm">
-                    <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
-                    <span className="hidden xs:inline">Actividad</span>
-                    <span className="xs:hidden">Act.</span>
-                  </TabsTrigger>
-                </TabsList>
+              <Tabs defaultValue="inflacion" className="space-y-3">
+                <div className="flex items-center justify-between mb-1">
+                  <TabsList className="flex-wrap">
+                    <TabsTrigger value="inflacion" className="text-xs sm:text-sm">
+                      <Percent className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
+                      <span className="hidden xs:inline">Inflación</span>
+                      <span className="xs:hidden">Infl.</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="tasas" className="text-xs sm:text-sm">
+                      <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
+                      Tasas
+                    </TabsTrigger>
+                    <TabsTrigger value="actividad" className="text-xs sm:text-sm">
+                      <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
+                      <span className="hidden xs:inline">Actividad</span>
+                      <span className="xs:hidden">Act.</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  <Link
+                    href="/indicadores"
+                    className="text-xs text-accent hover:text-accent-dark flex items-center gap-1"
+                  >
+                    Ver más
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
 
                 <TabsContent value="inflacion">
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">

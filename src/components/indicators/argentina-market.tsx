@@ -383,20 +383,29 @@ export function ArgentinaMarketWidget({
       <Card>
         <Tabs defaultValue="gainers">
           <CardHeader className="pb-0">
-            <TabsList>
-              <TabsTrigger value="gainers">
-                <TrendingUp className="w-3.5 h-3.5 mr-1 text-emerald-500" />
-                Alzas
-              </TabsTrigger>
-              <TabsTrigger value="losers">
-                <TrendingDown className="w-3.5 h-3.5 mr-1 text-rose-500" />
-                Bajas
-              </TabsTrigger>
-              <TabsTrigger value="active">
-                <BarChart3 className="w-3.5 h-3.5 mr-1" />
-                Vol.
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between">
+              <TabsList>
+                <TabsTrigger value="gainers">
+                  <TrendingUp className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                  Alzas
+                </TabsTrigger>
+                <TabsTrigger value="losers">
+                  <TrendingDown className="w-3.5 h-3.5 mr-1 text-rose-500" />
+                  Bajas
+                </TabsTrigger>
+                <TabsTrigger value="active">
+                  <BarChart3 className="w-3.5 h-3.5 mr-1" />
+                  Vol.
+                </TabsTrigger>
+              </TabsList>
+              <Link
+                href="/indicadores/mercados"
+                className="text-xs text-accent hover:text-accent-dark flex items-center gap-1"
+              >
+                Ver en BYMA
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
           </CardHeader>
           
           <CardContent className="pt-3">
