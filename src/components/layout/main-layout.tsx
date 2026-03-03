@@ -45,7 +45,7 @@ export function Header() {
         {/* Main Header Row — Logo prominente + utilidades */}
         <div className="flex items-center justify-between py-0">
           {/* Left: Dark mode toggle (mobile) / Weather (desktop) */}
-          <div className="flex items-center gap-2 w-32 md:w-48">
+          <div className="flex items-center gap-2 w-16 md:w-36">
             <div className="hidden lg:block">
               <WeatherDateTime />
             </div>
@@ -56,7 +56,7 @@ export function Header() {
 
           {/* Center: Logo — protagonista */}
           <Link href="/" className="flex flex-col items-center group">
-            <div className="relative h-10 w-44 md:h-12 md:w-56 lg:h-14 lg:w-72">
+            <div className="relative h-12 w-64 md:h-14 md:w-80 lg:h-16 lg:w-[420px]">
               <Image
                 src="/banners/Rosario%20Finanzas%20Logo.png"
                 alt="Rosario Finanzas"
@@ -68,7 +68,7 @@ export function Header() {
           </Link>
 
           {/* Right: Dark mode toggle (desktop) */}
-          <div className="flex items-center justify-end gap-2 w-32 md:w-48">
+          <div className="flex items-center justify-end gap-2 w-16 md:w-36">
             <Button variant="ghost" size="sm" onClick={toggleDarkMode} className="hidden lg:flex text-text-secondary dark:text-slate-400">
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
