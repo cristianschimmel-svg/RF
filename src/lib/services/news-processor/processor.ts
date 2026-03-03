@@ -37,7 +37,15 @@ const CONFIG = {
 // STRICT EXCLUSION LIST
 // Any article whose title+excerpt contains these words is rejected
 // ============================================================
+const EXCLUSION_COUNTRIES = [
+  'méxico', 'mexico', 'el salvador', 'colombia', 'chile', 'perú', 'peru', 
+  'venezuela', 'ecuador', 'bolivia', 'paraguay', 'españa', 'madrid', 'barcelona',
+  'bogotá', 'santiago de chile', 'lima', 'caracas', 'quito', 'la paz',
+];
+
 const EXCLUSION_KEYWORDS = [
+  // Blacklist sources
+  'lapoliticaonline', 'iprofesional', 'cointelegraph',
   // Gastronomía / alimentos no-finanzas
   'restaurante', 'pulpería', 'receta', 'cocina', 'chef', 'gastronomía', 'gastronómico',
   'gastronomico', 'sommelier', 'vino tinto', 'maridaje', 'menú degustación',
@@ -219,12 +227,31 @@ export function isArticleRelevant(article: ScrapedArticle): boolean {
   
   // STEP 1: Hard exclude — always reject these topics
   for (const keyword of EXCLUSION_KEYWORDS) {
-    if (text.includes(keyword)) {
+    if (text.includes(keyword) || article.url.toLowerCase().includes(keyword)) {
       console.log(`[NewsProcessor] ❌ Excluded: "${article.title.slice(0, 50)}..." (keyword: ${keyword})`);
       return false;
     }
   }
   
+  // STEP 1.5: Geographical Filter
+  // If the article mentions foreign countries and NOT Argentina, we probably don't want it,
+  // except if it talks about global markets (wall street, china, etc.) 
+  let hasForeignCountry = false;
+  for (const country of EXCLUSION_COUNTRIES) {
+    if (text.includes(country)) {
+      hasForeignCountry = true;
+      break;
+    }
+  }
+  
+  if (hasForeignCountry) {
+    const hasArgentina = text.includes('argentina') || text.includes('milei') || text.includes('caputo');
+    if (!hasArgentina) {
+      console.log(`[NewsProcessor] ❌ Excluded by GeoFilter (foreign country without Argentina): "${article.title.slice(0, 50)}..."`);
+      return false;
+    }
+  }
+
   // STEP 2: Age check — reject articles older than 3 days
   const articleAge = Date.now() - article.publishedAt.getTime();
   const maxAge = CONFIG.maxArticleAgeHours * 60 * 60 * 1000;

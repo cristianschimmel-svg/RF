@@ -293,3 +293,50 @@ export async function fetchInflacionHistorica(meses: number = 12): Promise<{ fec
     return [];
   }
 }
+// Fetch Plazo Fijo Rates
+export async function fetchTasaPlazoFijo(): Promise<Indicator | null> {
+  const cacheKey = 'argentinadatos:plazo-fijo';
+  const cached = cache.get<Indicator>(cacheKey);
+
+  if (cached) return cached;
+
+  try {
+    const url = `${API_CONFIG.argentinaDatos.baseUrl}/v1/finanzas/tasas/plazoFijo`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' }, next: { revalidate: 3600 } });
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    // Tomar la tasa maxima disponible para clientes
+    const validRates = data.filter(d => d.tnaClientes != null);
+    if (validRates.length === 0) return null;
+
+    // Obtener el promedio o la max, tomamos el promedio de los top 5 bancos
+    const maxTasa = Math.max(...validRates.map(d => d.tnaClientes * 100)); // Convertir a porcentaje
+
+    const indicator: Indicator = {
+      id: 'argentinadatos-plazofijo',
+      name: 'Tasa Plazo Fijo (Promedio Ref)',
+      shortName: 'Plazo Fijo',
+      category: 'tasas',
+      value: maxTasa,
+      previousValue: maxTasa,
+      change: 0,
+      changePercent: 0,
+      unit: '%',
+      format: 'percent',
+      decimals: 2,
+      source: 'ArgentinaDatos (respaldo)',
+      sourceUrl: 'https://argentinadatos.com',
+      lastUpdated: new Date().toISOString(),
+      frequency: 'daily',
+    };
+
+    cache.set(cacheKey, indicator, API_CONFIG.argentinaDatos.cacheTTL);
+    return indicator;
+  } catch (error) {
+    console.error('Error fetching ArgentinaDatos plazo fijo:', error);
+    return null;
+  }
+}

@@ -20,6 +20,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Silent hours check: 19:00 to 06:00 Argentina time
+  // AR time is UTC-3. We get current UTC hour, then subtract 3.
+  const now = new Date();
+  const currentUtcHour = now.getUTCHours();
+  let arHour = currentUtcHour - 3;
+  if (arHour < 0) arHour += 24;
+
+  // Between 19 and 23, or between 0 and 5
+  if (arHour >= 19 || arHour < 6) {
+    console.log(`[Cron] Skpping news refresh during silent hours (Current AR hour: ${arHour})`);
+    return NextResponse.json({
+      success: true,
+      message: 'Skipped - Silent hours (19:00 - 06:00 ART)',
+      result: { processedCount: 0, duration: 0 }
+    });
+  }
+
   console.log('[Cron] Starting scheduled news processing...');
 
   try {

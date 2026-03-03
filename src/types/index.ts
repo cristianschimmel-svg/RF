@@ -85,6 +85,24 @@ export interface DollarQuote {
 }
 
 // ============================================
+// Foreign Currency Types
+// ============================================
+
+export type CurrencyCode = 'EUR' | 'BRL' | 'UYU' | 'CLP' | 'GBP';
+
+export interface CurrencyQuote {
+  code: CurrencyCode;
+  name: string;
+  buy: number;
+  sell: number;
+  previousSell?: number;
+  changePercent: number;
+  lastUpdated: string;
+  source: IndicatorSource;
+  flag: string; // Emoji flag
+}
+
+// ============================================
 // News & Content Types
 // ============================================
 

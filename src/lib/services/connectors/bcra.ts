@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BCRA Connector
  * Fetches official indicators from Banco Central de la República Argentina
  * Con respaldo de ArgentinaDatos API
@@ -7,7 +7,7 @@
 import { API_CONFIG, BCRA_VARIABLE_IDS } from '../api-config';
 import { cache, rateLimiter } from '../cache';
 import type { Indicator, IndicatorSource } from '@/types';
-import { fetchInflacionMensual, fetchInflacionInteranual, fetchRiesgoPais } from './argentina-datos';
+import { fetchInflacionMensual, fetchInflacionInteranual, fetchRiesgoPais, fetchTasaPlazoFijo } from './argentina-datos';
 
 interface BCRAPrincipalVariable {
   idVariable: number;
@@ -293,7 +293,15 @@ async function getBackupData(): Promise<Indicator[]> {
     }
 
     // Intentar obtener riesgo país
-    const riesgoPais = await fetchRiesgoPais();
+    const plazoFijo = await fetchTasaPlazoFijo();
+      if (plazoFijo) {
+        indicators.push({
+          ...plazoFijo,
+          id: 'bcra-6',
+        });
+      }
+
+      const riesgoPais = await fetchRiesgoPais();
     if (riesgoPais) {
       indicators.push({
         ...riesgoPais,
@@ -422,3 +430,4 @@ export async function getUVA(): Promise<Indicator | null> {
 export async function getBADLAR(): Promise<Indicator | null> {
   return fetchBCRAVariable(BCRA_VARIABLE_IDS.badlarPrivados);
 }
+

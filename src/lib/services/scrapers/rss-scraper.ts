@@ -190,45 +190,8 @@ export const RSS_FEEDS: RSSFeedConfig[] = [
   },
 
   // =====================================================
-  // iPROFESIONAL — Secciones: Economía, Finanzas, Negocios
-  // =====================================================
-  {
-    source: {
-      id: 'iprofesional-economia',
-      name: 'iProfesional Economía',
-      baseUrl: 'https://www.iprofesional.com',
-      category: 'economia',
-      enabled: true,
-    },
-    feedUrl: 'https://www.iprofesional.com/rss/economia',
-    category: 'Economía',
-    priority: 6,
-  },
-  {
-    source: {
-      id: 'iprofesional-finanzas',
-      name: 'iProfesional Finanzas',
-      baseUrl: 'https://www.iprofesional.com',
-      category: 'finanzas',
-      enabled: true,
-    },
-    feedUrl: 'https://www.iprofesional.com/rss/finanzas',
-    category: 'Finanzas',
-    priority: 6,
-  },
-  {
-    source: {
-      id: 'iprofesional-negocios',
-      name: 'iProfesional Negocios',
-      baseUrl: 'https://www.iprofesional.com',
-      category: 'economia',
-      enabled: true,
-    },
-    feedUrl: 'https://www.iprofesional.com/rss/negocios',
-    category: 'Economía',
-    priority: 5,
-  },
-
+    // iPROFESIONAL — Removed upon blacklist request
+    // =====================================================
   // =====================================================
   // BLOOMBERG LÍNEA — Secciones: Mercados, Economía, Negocios
   // =====================================================
@@ -275,19 +238,8 @@ export const RSS_FEEDS: RSSFeedConfig[] = [
   // =====================================================
   // CRIPTO (already specialized portals)
   // =====================================================
-  {
-    source: {
-      id: 'cointelegraph-es',
-      name: 'CoinTelegraph ES',
-      baseUrl: 'https://es.cointelegraph.com',
-      category: 'cripto',
-      enabled: true,
-    },
-    feedUrl: 'https://es.cointelegraph.com/rss',
-    category: 'Cripto',
-    priority: 7,
-    keywords: ['bitcoin', 'ethereum', 'cripto', 'blockchain', 'btc', 'defi', 'altcoin'],
-  },
+  // COINTELEGRAPH ES — Removed upon blacklist request
+  // =====================================================
   {
     source: {
       id: 'criptonoticias',

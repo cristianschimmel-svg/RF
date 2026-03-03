@@ -227,7 +227,7 @@ function DollarDetailCard({ quote, oficialSell }: { quote: DollarQuote; oficialS
   return (
     <div className={`rounded-lg border p-4 ${colors[trend]} transition-colors`}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-text-primary dark:text-white">{quote.name}</h3>
+        <h3 className="text-base font-bold text-text-primary dark:text-white">{quote.name}</h3>
         {quote.source !== 'fallback' && (
           <span className="flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
@@ -238,28 +238,28 @@ function DollarDetailCard({ quote, oficialSell }: { quote: DollarQuote; oficialS
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-2xs text-text-muted dark:text-slate-400 mb-0.5">Compra</p>
-          <p className="text-lg font-bold font-mono text-text-primary dark:text-white">
-            {quote.buy > 0 ? `$${quote.buy.toLocaleString('es-AR', { maximumFractionDigits: 2 })}` : '—'}
+          <p className="text-xs text-text-muted dark:text-slate-400 mb-0.5">Compra</p>
+          <p className="text-2xl font-bold font-mono text-text-primary dark:text-white">
+            {quote.buy > 0 ? `$${quote.buy.toLocaleString('es-AR', { maximumFractionDigits: 1 })}` : '—'}
           </p>
         </div>
         <div>
-          <p className="text-2xs text-text-muted dark:text-slate-400 mb-0.5">Venta</p>
-          <p className="text-lg font-bold font-mono text-text-primary dark:text-white">
-            ${quote.sell.toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+          <p className="text-xs text-text-muted dark:text-slate-400 mb-0.5">Venta</p>
+          <p className="text-2xl font-bold font-mono text-text-primary dark:text-white">
+            ${quote.sell.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
           </p>
         </div>
       </div>
 
       <div className="flex items-center justify-between mt-3 pt-2 border-t border-border-muted dark:border-slate-700/50">
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-3 h-3 text-text-muted dark:text-slate-500" />
-          <span className="text-2xs text-text-muted dark:text-slate-400">
+          <ArrowUpDown className="w-3.5 h-3.5 text-text-muted dark:text-slate-500" />
+          <span className="text-xs text-text-muted dark:text-slate-400">
             Spread: {quote.spread.toFixed(2)}%
           </span>
         </div>
         {brecha !== null && (
-          <span className="text-2xs text-amber-600 dark:text-amber-400">
+          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
             Brecha: {brecha > 0 ? '+' : ''}{brecha.toFixed(1)}%
           </span>
         )}

@@ -120,15 +120,17 @@ export function IndicatorCard({
             </SimpleTooltip>
           )}
         </div>
-        <VariationBadge
-          value={indicator.changePercent}
-          size={size === 'lg' ? 'md' : 'sm'}
-        />
+        {!indicator.noData && (
+          <VariationBadge
+            value={indicator.changePercent}
+            size={size === 'lg' ? 'md' : 'sm'}
+          />
+        )}
       </div>
 
       {/* Main Value */}
-      <div className={cn('text-text-primary text-data', s.value)}>
-        {formatValue(indicator.value)}
+      <div className={cn('text-text-primary text-data', s.value, indicator.noData && 'text-sm text-text-muted')}>
+        {indicator.noData ? 'No disp.' : formatValue(indicator.value)}
       </div>
 
       {/* Sparkline */}

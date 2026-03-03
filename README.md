@@ -137,7 +137,7 @@ node node_modules/next/dist/bin/next dev
 | Campo | Valor |
 |-------|-------|
 | **Email** | `admin@rosariofinanzas.com.ar` |
-| **Contraseña** | `admin123` |
+| **Contraseña** | `WenCri123$` |
 | **Rol** | ADMIN |
 
 ### Roles disponibles
@@ -198,7 +198,7 @@ La página principal muestra:
 1. Ir a http://localhost:3000/admin/login
 2. Ingresar credenciales:
    - Email: `admin@rosariofinanzas.com.ar`
-   - Contraseña: `admin123`
+   - Contraseña: `WenCri123$`
 3. Click en **Iniciar Sesión**
 
 ### Dashboard
@@ -491,7 +491,7 @@ Ejecutar el seed nuevamente (esto borra y recrea los datos):
 npm run db:seed
 ```
 
-Credenciales: `admin@rosariofinanzas.com.ar` / `admin123`
+Credenciales: `admin@rosariofinanzas.com.ar` / `WenCri123$`
 
 ---
 

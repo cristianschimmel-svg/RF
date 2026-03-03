@@ -129,9 +129,9 @@ function buildTickerItems(
     items.push({
       id: 'ticker-inflacion',
       label: 'Inflación',
-      value: `${inflacion.value.toFixed(1)}%`,
-      change: inflacion.changePercent ? `${inflacion.changePercent > 0 ? '+' : ''}${inflacion.changePercent.toFixed(1)}%` : undefined,
-      trend: getTrend(-inflacion.changePercent), // Negative is good for inflation
+      value: inflacion.noData ? 'No disp.' : `${inflacion.value.toFixed(1)}%`,
+      change: inflacion.noData ? undefined : (inflacion.changePercent ? `${inflacion.changePercent > 0 ? '+' : ''}${inflacion.changePercent.toFixed(1)}%` : undefined),
+      trend: inflacion.noData ? 'neutral' : getTrend(-inflacion.changePercent), // Negative is good for inflation
     });
   }
 
@@ -171,13 +171,13 @@ function buildTickerItems(
   }
 
   // Commodities
-  const soja = commodities.find((i) => i.shortName.toLowerCase() === 'soja');
-  const maiz = commodities.find((i) => i.shortName.toLowerCase() === 'maíz');
+  const soja = commodities.find((i) => i.shortName.toLowerCase().includes('soja'));
+  const maiz = commodities.find((i) => i.shortName.toLowerCase().includes('maíz'));
   
   if (soja) {
     items.push({
       id: 'ticker-soja',
-      label: 'Soja',
+      label: 'Soja (CBOT)',
       value: `$${soja.value.toFixed(0)}`,
       change: `${soja.changePercent > 0 ? '+' : ''}${soja.changePercent.toFixed(1)}%`,
       trend: getTrend(soja.changePercent),
@@ -187,7 +187,7 @@ function buildTickerItems(
   if (maiz) {
     items.push({
       id: 'ticker-maiz',
-      label: 'Maíz',
+      label: 'Maíz (CBOT)',
       value: `$${maiz.value.toFixed(0)}`,
       change: `${maiz.changePercent > 0 ? '+' : ''}${maiz.changePercent.toFixed(1)}%`,
       trend: getTrend(maiz.changePercent),

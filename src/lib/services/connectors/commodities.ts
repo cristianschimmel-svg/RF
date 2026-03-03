@@ -19,8 +19,8 @@ interface CommoditiesResult {
 const COMMODITY_TICKERS = {
   soja: {
     ticker: 'ZS=F',
-    name: 'Soja CBOT',
-    shortName: 'Soja',
+    name: 'Soja (Chicago/CBOT)',
+    shortName: 'Soja (CBOT)',
     category: 'agro' as const,
     unit: 'USd/bu',       // cents per bushel (native Yahoo unit)
     displayUnit: 'USD/tn', // we convert to USD per metric ton
@@ -31,8 +31,8 @@ const COMMODITY_TICKERS = {
   },
   maiz: {
     ticker: 'ZC=F',
-    name: 'Maíz CBOT',
-    shortName: 'Maíz',
+    name: 'Maíz (Chicago/CBOT)',
+    shortName: 'Maíz (CBOT)',
     category: 'agro' as const,
     unit: 'USd/bu',
     displayUnit: 'USD/tn',
@@ -43,8 +43,8 @@ const COMMODITY_TICKERS = {
   },
   trigo: {
     ticker: 'ZW=F',
-    name: 'Trigo CBOT',
-    shortName: 'Trigo',
+    name: 'Trigo (Chicago/CBOT)',
+    shortName: 'Trigo (CBOT)',
     category: 'agro' as const,
     unit: 'USd/bu',
     displayUnit: 'USD/tn',
@@ -55,8 +55,8 @@ const COMMODITY_TICKERS = {
   },
   aceite_soja: {
     ticker: 'ZL=F',
-    name: 'Aceite de Soja',
-    shortName: 'Ac. Soja',
+    name: 'Aceite de Soja (Chicago/CBOT)',
+    shortName: 'Ac. Soja (CBOT)',
     category: 'agro' as const,
     unit: 'USd/lb',
     displayUnit: 'USD/tn',

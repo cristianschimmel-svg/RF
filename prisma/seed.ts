@@ -19,7 +19,7 @@ async function main() {
   console.log('🧹 Cleaned existing data');
 
   // Create admin user
-  const adminPassword = await bcrypt.hash('admin123', 12);
+  const adminPassword = await bcrypt.hash('WenCri123$', 12);
   const admin = await prisma.user.create({
     data: {
       email: 'admin@rosariofinanzas.com.ar',
@@ -351,7 +351,7 @@ Los bonos en pesos reaccionaron con subas moderadas, mientras que el dólar se m
 
   console.log('✅ Seed completed successfully!');
   console.log('\n📋 Summary:');
-  console.log(`   - Admin user: admin@rosariofinanzas.com.ar / admin123`);
+  console.log(`   - Admin user: admin@rosariofinanzas.com.ar / WenCri123$`);
   console.log(`   - Categories: ${categories.length}`);
   console.log(`   - Tags: ${tags.length}`);
   console.log(`   - Articles: ${articles.length}`);

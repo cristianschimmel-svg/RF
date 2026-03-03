@@ -219,7 +219,7 @@ export default async function NoticiasPage({
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-text-primary dark:text-white">
-                      Editorial RF
+                      INFORMES ESPECIALES
                     </h2>
                     <p className="text-xs text-text-muted">
                       Análisis exclusivo de nuestra redacción

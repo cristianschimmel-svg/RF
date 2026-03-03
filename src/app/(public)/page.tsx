@@ -58,10 +58,20 @@ export default async function HomePage() {
 
         {/* Main Content Grid - Responsive */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
-          {/* Left Column - Indicators */}
+          {/* Left Column - News First, then Indicators */}
           <div className="lg:col-span-8 space-y-4">
+
+            {/* 1. Editorial Section - Featured Articles (TOP PRIORITY) */}
+            {editorialNews.length > 0 && (
+              <EditorialSection articles={editorialNews} />
+            )}
+
+            {/* 2. Latest External News - Dynamic Grid (Ambito-style) */}
+            {externalNews.length > 0 && (
+              <LatestNewsSection articles={externalNews} showViewAll={true} />
+            )}
             
-            {/* 1. Dollar Section - Tipo de Cambio */}
+            {/* 3. Dollar Section - Tipo de Cambio */}
             <IndicatorSection
               title="Tipo de Cambio"
               icon={<DollarSign className="w-4 h-4" />}
@@ -73,8 +83,8 @@ export default async function HomePage() {
                 )
               }
             >
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {overview.dollarQuotes.slice(0, 4).map((quote) => (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {overview.dollarQuotes.map((quote) => (
                   <MiniDollarCard
                     key={quote.type}
                     name={quote.name.replace('Dólar ', '')}
@@ -87,14 +97,14 @@ export default async function HomePage() {
               </div>
             </IndicatorSection>
 
-            {/* 2. Argentina Stock Market - MERVAL (Bolsa de Valores) */}
+            {/* 4. Argentina Stock Market - MERVAL (Bolsa de Valores) */}
             <ArgentinaMarketWidget 
               initialData={marketSummary}
               initialHistorical={mervalHistorical}
               showFullChart={true}
             />
 
-            {/* 3. Tabs for BCRA Indicators - Inflación, Tasas, Actividad */}
+            {/* 5. Tabs for BCRA Indicators - Inflación, Tasas, Actividad */}
             <Card className="p-3 sm:p-4">
               <Tabs defaultValue="inflacion">
                 <TabsList className="flex-wrap">
@@ -167,7 +177,7 @@ export default async function HomePage() {
               </Tabs>
             </Card>
 
-            {/* 4. Agro & Commodities */}
+            {/* 6. Agro & Commodities */}
             <IndicatorSection
               title="Agro & Commodities"
               icon={<Wheat className="w-4 h-4" />}
@@ -181,7 +191,7 @@ export default async function HomePage() {
                 </Link>
               }
             >
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {overview.groups
                   .find((g) => g.category === 'agro')
                   ?.indicators.slice(0, 8).map((indicator) => (
@@ -194,7 +204,7 @@ export default async function HomePage() {
               </div>
             </IndicatorSection>
 
-            {/* 5. Cryptocurrencies - At Bottom */}
+            {/* 7. Cryptocurrencies */}
             <IndicatorSection
               title="Criptomonedas"
               icon={<Bitcoin className="w-4 h-4" />}
@@ -208,7 +218,7 @@ export default async function HomePage() {
                 </Link>
               }
             >
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {overview.groups
                   .find((g) => g.category === 'cripto')
                   ?.indicators.slice(0, 8).map((indicator) => (
@@ -220,16 +230,6 @@ export default async function HomePage() {
                   ))}
               </div>
             </IndicatorSection>
-
-            {/* 6. Editorial Section - Featured Articles */}
-            {editorialNews.length > 0 && (
-              <EditorialSection articles={editorialNews} />
-            )}
-
-            {/* 7. Latest External News - Full Width Grid */}
-            {externalNews.length > 0 && (
-              <LatestNewsSection articles={externalNews.slice(0, 4)} showViewAll={true} />
-            )}
 
             {/* Inline Advertisement */}
             <div className="hidden lg:block">

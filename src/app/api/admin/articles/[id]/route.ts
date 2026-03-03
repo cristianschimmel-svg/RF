@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
+import { invalidateNewsCache } from '@/lib/services/news-service';
 import { z } from 'zod';
 
 const articleSchema = z.object({
@@ -9,11 +10,17 @@ const articleSchema = z.object({
   slug: z.string().min(1, 'El slug es requerido').max(200),
   excerpt: z.string().max(500).optional().nullable(),
   content: z.string().optional().nullable(),
-  coverImage: z.string().url().optional().nullable().or(z.literal('')),
+  coverImage: z.string().optional().nullable().or(z.literal('')),
   categoryId: z.string().uuid().optional().nullable().or(z.literal('')),
   status: z.enum(['DRAFT', 'PUBLISHED', 'SCHEDULED', 'ARCHIVED']),
   publishedAt: z.string().datetime().optional().nullable(),
   tagIds: z.array(z.string().uuid()).optional(),
+  // SEO fields
+  metaTitle: z.string().max(70).optional().nullable().or(z.literal('')),
+  metaDescription: z.string().max(160).optional().nullable().or(z.literal('')),
+  ogImage: z.string().optional().nullable().or(z.literal('')),
+  keywords: z.string().max(500).optional().nullable().or(z.literal('')),
+  canonicalUrl: z.string().optional().nullable().or(z.literal('')),
 });
 
 interface RouteParams {
@@ -115,6 +122,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         categoryId: data.categoryId || null,
         status: data.status,
         publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
+        metaTitle: data.metaTitle || null,
+        metaDescription: data.metaDescription || null,
+        ogImage: data.ogImage || null,
+        keywords: data.keywords || null,
+        canonicalUrl: data.canonicalUrl || null,
         tags: {
           deleteMany: {},
           create: data.tagIds?.map((tagId) => ({
@@ -132,6 +144,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         },
       },
     });
+
+    // Invalidate cache so changes appear immediately
+    invalidateNewsCache();
 
     return NextResponse.json(article);
   } catch (error) {
@@ -182,6 +197,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await prisma.article.delete({
       where: { id },
     });
+
+    // Invalidate cache so deletion is reflected immediately
+    invalidateNewsCache();
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -14,7 +14,7 @@ const indicadorLinks = [
   { href: '/indicadores/dolar', label: 'Dólar', icon: DollarSign },
   { href: '/indicadores/inflacion', label: 'Inflación', icon: Percent },
   { href: '/indicadores/tasas', label: 'Tasas', icon: Activity },
-  { href: '/indicadores/mercados', label: 'Mercados', icon: BarChart3 },
+    { href: '/indicadores/mercados', label: 'Acciones', icon: BarChart3 },
   { href: '/indicadores/agro', label: 'Agro', icon: Wheat },
   { href: '/indicadores/cripto', label: 'Cripto', icon: Bitcoin },
 ];
@@ -30,13 +30,13 @@ export default function IndicadoresLayout({
         {/* Navigation Tabs */}
         <nav className="mb-4 overflow-x-auto">
           <div className="flex items-center gap-1 min-w-max border-b border-border dark:border-slate-800 pb-2">
-            <NavTab href="/indicadores/dolar" icon={<LayoutDashboard className="w-3.5 h-3.5" />} label="Dashboard" isDefault />
             {indicadorLinks.map((link) => (
               <NavTab
                 key={link.href}
                 href={link.href}
                 icon={<link.icon className="w-3.5 h-3.5" />}
                 label={link.label}
+                isDefault={link.href === '/indicadores/dolar'}
               />
             ))}
           </div>

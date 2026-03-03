@@ -1,4 +1,4 @@
-/**
+﻿/**
  * News Store (Database-backed)
  * Handles persistence of processed news using Prisma/PostgreSQL
  * Drop-in replacement for the old JSON file store — same API surface.
@@ -136,7 +136,20 @@ export function areTitlesSimilar(titleA: string, titleB: string): boolean {
   const setB = new Set(wordsB);
   const common = wordsA.filter(w => setB.has(w)).length;
   const shorter = Math.min(wordsA.length, wordsB.length);
-  return (common / shorter) >= 0.7;
+  return (common / shorter) >= 0.6; // Stricter deduplication threshold (from 0.7 to 0.6)
+}
+
+export function getArticleTopic(title: string): string | null {
+  const normTitle = normalizeTitle(title);
+  if (normTitle.includes('dolar blue') || normTitle.includes('dolar paralelo')) return 'dolar_blue';
+  if (normTitle.includes('dolar mep') || normTitle.includes('contado con liqui') || normTitle.includes('ccl')) return 'dolar_financiero';
+  if (normTitle.includes('riesgo pais')) return 'riesgo_pais';
+  if (normTitle.includes('inflacion') || normTitle.includes('ipc')) return 'inflacion';
+  if (normTitle.includes('merval') || normTitle.includes('s&p merval') || normTitle.includes('bolsa portena')) return 'merval';
+  if (normTitle.includes('tasa de interes') || normTitle.includes('plazo fijo') || normTitle.includes('leliq')) return 'tasas';
+  if (normTitle.includes('soja') || normTitle.includes('maiz') || normTitle.includes('trigo')) return 'granos';
+  if (normTitle.includes('reserva') && normTitle.includes('bcra')) return 'reservas';
+  return null;
 }
 
 // ─── upsert / query ──────────────────────────────────────────
@@ -172,15 +185,54 @@ export async function upsertArticles(
     if (!titleMap.has(norm)) titleMap.set(norm, article);
   }
 
-  // 4. Fuzzy similarity dedup
+  // 4. Fuzzy similarity & Topic dedup
   const uniqueArticles: ProcessedNews[] = [];
+  const topicMap = new Map<string, ProcessedNews>();
+
+  // Time window for topic deduplication: 12 hours (only keep 1 article per topic within 12h)
+  const TOPIC_TIME_WINDOW_MS = 12 * 60 * 60 * 1000;
+
   for (const article of Array.from(titleMap.values())) {
+    // 4.1 Fuzzy similarity check
     const isDup = uniqueArticles.some(ex => areTitlesSimilar(ex.title, article.title));
-    if (!isDup) {
-      uniqueArticles.push(article);
-    } else {
+    if (isDup) {
       console.log(`[DBStore] Fuzzy-dedup removed: "${article.title.slice(0, 50)}..."`);
+      continue;
     }
+
+    // 4.2 Topic temporal deduplication
+    const topic = getArticleTopic(article.title);
+    if (topic) {
+      const existingTopicArticle = topicMap.get(topic);
+      if (existingTopicArticle) {
+        const timeDiff = Math.abs(new Date(existingTopicArticle.publishedAt).getTime() - new Date(article.publishedAt).getTime());
+        if (timeDiff < TOPIC_TIME_WINDOW_MS) {
+          // If we found a newer article or higher priority for the same topic within the window, we should decide which to keep.
+          // Since allArticles are sorted by publishedAt desc, existingTopicArticle is NEWER.
+          // So we skip adding `article` which is older.
+          console.log(`[DBStore] Topic-dedup (${topic}) removed older: "${article.title.slice(0, 50)}..."`);
+          continue;
+        }
+      } else {
+        // Find if this topic exists in already unique articles to catch it
+        const existingInUnique = uniqueArticles.find(ex => {
+           let exTopic = getArticleTopic(ex.title);
+           if (exTopic === topic) {
+              const timeDiff = Math.abs(new Date(ex.publishedAt).getTime() - new Date(article.publishedAt).getTime());
+              return timeDiff < TOPIC_TIME_WINDOW_MS;
+           }
+           return false;
+        });
+        
+        if (existingInUnique) {
+          console.log(`[DBStore] Topic-dedup (${topic}) removed older: "${article.title.slice(0, 50)}..."`);
+          continue;
+        }
+      }
+      topicMap.set(topic, article);
+    }
+
+    uniqueArticles.push(article);
   }
 
   // 5. Sort and trim
@@ -191,7 +243,7 @@ export async function upsertArticles(
   const validArticles = uniqueArticles.filter(a => !a.processingError?.startsWith('AI Rejected'));
   const rejectedArticles = uniqueArticles.filter(a => a.processingError?.startsWith('AI Rejected'));
   
-  const finalValid = validArticles.slice(0, maxArticles);
+  const finalValid = validArticles; // Keep all within retention period
   
   // Keep rejected articles that are less than 3 days old so we don't retry them
   const threeDaysAgo = Date.now() - 72 * 60 * 60 * 1000;
@@ -208,10 +260,7 @@ export async function upsertArticles(
   const finalIds = new Set(final.map(a => a.id));
 
   await prisma.$transaction(async (tx) => {
-    // Delete articles no longer in the final set
-    await tx.processedNewsArticle.deleteMany({
-      where: { id: { notIn: Array.from(finalIds) } },
-    });
+    // Let purgeOldArticles handle retention instead of deleting on every upsert
 
     // Upsert each article
     for (const a of final) {
@@ -370,3 +419,4 @@ export async function clearStore(): Promise<void> {
   });
   console.log('[DBStore] Store cleared');
 }
+

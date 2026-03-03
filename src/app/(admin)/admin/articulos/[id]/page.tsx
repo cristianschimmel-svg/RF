@@ -14,7 +14,21 @@ export default async function EditArticuloPage({ params }: PageProps) {
   const [article, categories, tags] = await Promise.all([
     prisma.article.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        content: true,
+        coverImage: true,
+        status: true,
+        publishedAt: true,
+        categoryId: true,
+        metaTitle: true,
+        metaDescription: true,
+        ogImage: true,
+        keywords: true,
+        canonicalUrl: true,
         tags: {
           include: {
             tag: true,

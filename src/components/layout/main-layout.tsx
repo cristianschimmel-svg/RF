@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -42,44 +42,38 @@ export function Header() {
       </div>
       
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-12 md:h-14">
-          {/* Logo con RF monogram + imagen */}
-          <Link href="/" className="flex items-center gap-2 group flex-1 min-w-0">
-            {/* RF Monogram */}
-            <div className="flex items-center justify-center h-9 w-9 md:h-10 md:w-10 rounded-md bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 dark:from-blue-600 dark:via-blue-500 dark:to-cyan-400 shadow-md group-hover:shadow-lg transition-shadow duration-300 flex-shrink-0">
-              <span className="text-white font-extrabold text-lg md:text-xl tracking-tight leading-none" style={{ fontFamily: "'Georgia', 'Times New Roman', serif", letterSpacing: '-0.07em' }}>
-                RF
-              </span>
+        {/* Main Header Row — Logo prominente + utilidades */}
+        <div className="flex items-center justify-between py-3 md:py-4">
+          {/* Left: Dark mode toggle (mobile) / Weather (desktop) */}
+          <div className="flex items-center gap-2 w-32 md:w-48">
+            <div className="hidden lg:block">
+              <WeatherDateTime />
             </div>
-            {/* Logo image */}
-            <div className="relative h-9 md:h-11 flex-1 p-0.5 dark:bg-white/70 rounded">
+            <Button variant="ghost" size="sm" onClick={toggleDarkMode} className="lg:hidden text-text-secondary dark:text-slate-400">
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+          </div>
+
+          {/* Center: Logo — protagonista */}
+          <Link href="/" className="flex flex-col items-center gap-1 group">
+            <div className="relative h-10 w-48 md:h-14 md:w-72 lg:h-16 lg:w-80">
               <Image
                 src="/banners/Rosario%20Finanzas%20Logo.png"
                 alt="Rosario Finanzas"
                 fill
-                className="object-contain object-left"
+                className="object-contain dark:brightness-110"
                 priority
               />
             </div>
+            <span className="hidden md:block text-[10px] md:text-xs text-text-muted dark:text-slate-500 tracking-widest uppercase">
+              Economía &amp; Finanzas — Rosario y Región
+            </span>
           </Link>
 
-          {/* Center - Tagline + Date/Time/Weather - solo desktop */}
-          <div className="hidden lg:flex items-center gap-3 border-l border-border-muted dark:border-slate-700 pl-4">
-            <span className="text-xs text-text-muted dark:text-slate-400 leading-tight">
-              El Portal de Economía y Finanzas<br />más importante de la región
-            </span>
-            <WeatherDateTime />
-          </div>
-
-          {/* Right side - Solo toggle de modo oscuro */}
-          <div className="flex items-center gap-2">
-            {/* Dark mode toggle */}
-            <Button variant="ghost" size="sm" onClick={toggleDarkMode} className="text-text-secondary dark:text-slate-400">
-              {isDarkMode ? (
-                <Sun className="w-5 h-5" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
+          {/* Right: Dark mode toggle (desktop) */}
+          <div className="flex items-center justify-end gap-2 w-32 md:w-48">
+            <Button variant="ghost" size="sm" onClick={toggleDarkMode} className="hidden lg:flex text-text-secondary dark:text-slate-400">
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -96,15 +90,14 @@ export function Footer() {
       { name: 'Dólar', href: '/indicadores/dolar' },
       { name: 'Inflación', href: '/indicadores/inflacion' },
       { name: 'Tasas', href: '/indicadores/tasas' },
-      { name: 'Mercados', href: '/indicadores/mercados' },
+        { name: 'Acciones', href: '/indicadores/mercados' },
       { name: 'Agro', href: '/indicadores/agro' },
       { name: 'Cripto', href: '/indicadores/cripto' },
     ],
     recursos: [
       { name: 'Noticias', href: '/noticias' },
-      { name: 'Análisis', href: '/analisis' },
-      { name: 'Calculadoras', href: '/herramientas' },
-      { name: 'API', href: '/api-docs' },
+      { name: 'Informes', href: '/informes-especiales' },
+      { name: 'Mercados', href: '/herramientas' },
     ],
     legal: [
       { name: 'Términos de uso', href: '/terminos' },
@@ -120,7 +113,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="block mb-4">
-              <div className="relative h-16 w-56 dark:brightness-110">
+              <div className="relative h-12 w-52 dark:brightness-110">
                 <Image
                   src="/banners/Rosario%20Finanzas%20Logo.png"
                   alt="Rosario Finanzas"
@@ -129,8 +122,11 @@ export function Footer() {
                 />
               </div>
             </Link>
+            <p className="text-xs tracking-widest uppercase text-text-muted dark:text-slate-500 mb-2">
+              Economía &amp; Finanzas — Rosario y Región
+            </p>
             <p className="text-sm text-text-muted dark:text-slate-400 max-w-xs">
-              Indicadores económicos y noticias financieras para Rosario y zona. Datos actualizados en tiempo real.
+              Indicadores económicos y noticias financieras. Datos actualizados en tiempo real.
             </p>
           </div>
 
@@ -228,3 +224,4 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

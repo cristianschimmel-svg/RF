@@ -10,11 +10,17 @@ const articleSchema = z.object({
   slug: z.string().min(1, 'El slug es requerido').max(200),
   excerpt: z.string().max(500).optional().nullable(),
   content: z.string().optional().nullable(),
-  coverImage: z.string().url().optional().nullable().or(z.literal('')),
+  coverImage: z.string().optional().nullable().or(z.literal('')),
   categoryId: z.string().uuid().optional().nullable().or(z.literal('')),
   status: z.enum(['DRAFT', 'PUBLISHED', 'SCHEDULED', 'ARCHIVED']),
   publishedAt: z.string().datetime().optional().nullable(),
   tagIds: z.array(z.string().uuid()).optional(),
+  // SEO fields
+  metaTitle: z.string().max(70).optional().nullable().or(z.literal('')),
+  metaDescription: z.string().max(160).optional().nullable().or(z.literal('')),
+  ogImage: z.string().optional().nullable().or(z.literal('')),
+  keywords: z.string().max(500).optional().nullable().or(z.literal('')),
+  canonicalUrl: z.string().optional().nullable().or(z.literal('')),
 });
 
 export async function POST(request: NextRequest) {
@@ -56,6 +62,11 @@ export async function POST(request: NextRequest) {
         status: data.status,
         publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
         authorId: session.user.id,
+        metaTitle: data.metaTitle || null,
+        metaDescription: data.metaDescription || null,
+        ogImage: data.ogImage || null,
+        keywords: data.keywords || null,
+        canonicalUrl: data.canonicalUrl || null,
         tags: data.tagIds?.length
           ? {
               create: data.tagIds.map((tagId) => ({

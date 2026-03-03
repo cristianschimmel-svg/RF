@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getNewsArticle, getExternalNews } from '@/lib/services/unified-news-service';
-import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { formatDate, formatRelativeTime, markdownToHtml } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -41,19 +41,44 @@ export async function generateMetadata({ params }: PageProps) {
     };
   }
 
+  // For editorial articles, fetch SEO fields from DB
+  let metaTitle: string | undefined;
+  let metaDescription: string | undefined;
+  let ogImage: string | undefined;
+  let keywords: string | undefined;
+
+  if (article.isEditorial) {
+    try {
+      const { prisma } = await import('@/lib/db/prisma');
+      const dbArticle = await prisma.article.findUnique({
+        where: { slug },
+        select: { metaTitle: true, metaDescription: true, ogImage: true, keywords: true },
+      });
+      metaTitle = dbArticle?.metaTitle || undefined;
+      metaDescription = dbArticle?.metaDescription || undefined;
+      ogImage = dbArticle?.ogImage || undefined;
+      keywords = dbArticle?.keywords || undefined;
+    } catch { /* ignore, fall back to defaults */ }
+  }
+
+  const title = metaTitle || article.title;
+  const description = metaDescription || article.excerpt || article.aiSummary;
+  const image = ogImage || article.imageUrl;
+
   return {
-    title: `${article.title} | Rosario Finanzas`,
-    description: article.excerpt || article.aiSummary,
+    title: `${title} | Rosario Finanzas`,
+    description,
+    ...(keywords && { keywords: keywords.split(',').map((k: string) => k.trim()) }),
     openGraph: {
-      title: article.title,
-      description: article.excerpt || article.aiSummary || undefined,
-      images: article.imageUrl ? [article.imageUrl] : undefined,
+      title,
+      description: description || undefined,
+      images: image ? [image] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title: article.title,
-      description: article.excerpt || article.aiSummary || undefined,
-      images: article.imageUrl ? [article.imageUrl] : undefined,
+      title,
+      description: description || undefined,
+      images: image ? [image] : undefined,
     },
   };
 }
@@ -92,7 +117,7 @@ export default async function ArticlePage({ params }: PageProps) {
           <div className="lg:col-span-2">
             {/* Header */}
             <header className="mb-6">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-5">
                 {/* Source Badge */}
                 {article.isExternal ? (
                   <Badge variant="outline" className="gap-1">
@@ -102,7 +127,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 ) : (
                   <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 gap-1">
                     <Pen className="w-3 h-3" />
-                    Editorial RF
+                    INFORMES ESPECIALES
                   </Badge>
                 )}
                 
@@ -152,7 +177,7 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* Featured Image */}
             <div className="relative aspect-video rounded-xl overflow-hidden mb-8 shadow-lg">
               <Image
-                src={article.aiImageUrl || article.imageUrl}
+                src={article.imageUrl || article.aiImageUrl}
                 alt={article.title}
                 fill
                 className="object-cover"
@@ -233,7 +258,7 @@ export default async function ArticlePage({ params }: PageProps) {
               <div
                 className="prose prose-warm max-w-none mb-8"
                 dangerouslySetInnerHTML={{
-                  __html: article.content,
+                  __html: markdownToHtml(article.content),
                 }}
               />
             )}

@@ -16,7 +16,7 @@ import type { Trend } from '@/types';
 export const revalidate = 120;
 
 export const metadata = {
-  title: 'Mercados | Rosario Finanzas',
+  title: 'Acciones | Rosario Finanzas',
   description: 'S&P Merval, acciones líderes, top ganadores y perdedores del mercado argentino.',
 };
 
@@ -36,7 +36,7 @@ export default async function MercadosPage() {
         <div>
           <h1 className="text-xl font-bold text-text-primary dark:text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-blue-500" />
-            Mercados
+            Acciones
           </h1>
           <p className="text-xs text-text-muted dark:text-slate-400 flex items-center gap-1 mt-1">
             <Clock className="w-3 h-3" />

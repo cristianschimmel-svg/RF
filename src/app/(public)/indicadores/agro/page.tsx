@@ -122,33 +122,6 @@ export default async function AgroPage() {
         </CardContent>
       </Card>
 
-      {/* Context for Rosario */}
-      <Card>
-        <CardHeader title="Rosario: Capital del Agro" />
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg">
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">80%</p>
-              <p className="text-2xs text-text-muted dark:text-slate-400 mt-1">
-                De las exportaciones argentinas de granos pasan por el Gran Rosario
-              </p>
-            </div>
-            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-              <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">MATBA-ROFEX</p>
-              <p className="text-2xs text-text-muted dark:text-slate-400 mt-1">
-                Mercado de futuros de Rosario, referente para commodities agrícolas
-              </p>
-            </div>
-            <div className="text-center p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg">
-              <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">Bolsa de Comercio</p>
-              <p className="text-2xs text-text-muted dark:text-slate-400 mt-1">
-                BCR Rosario: principal referente en precios de granos de Argentina
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Disclaimer */}
       <Card variant="outlined" className="bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900/30">
         <CardContent>

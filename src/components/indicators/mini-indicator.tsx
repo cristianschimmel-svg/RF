@@ -67,7 +67,7 @@ export function MiniIndicator({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors cursor-default relative',
+        'flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border transition-colors cursor-default relative',
         colors.bg,
         colors.border,
         isFallback && 'border-dashed',
@@ -87,24 +87,26 @@ export function MiniIndicator({
       
       <div className="flex items-center gap-2 min-w-0">
         {showIcon && (
-          isFallback ? (
-            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-amber-500" />
+          isFallback || indicator.noData ? (
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-500" />
           ) : (
-            <TrendIcon className={cn('w-3.5 h-3.5 flex-shrink-0', colors.icon)} />
+            <TrendIcon className={cn('w-4 h-4 flex-shrink-0', colors.icon)} />
           )
         )}
-        <span className="text-xs text-text-secondary dark:text-slate-300 truncate">
+        <span className="text-sm font-medium text-text-secondary dark:text-slate-300 truncate">
           {indicator.shortName || indicator.name}
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <span className={cn('text-sm font-semibold tabular-nums', isFallback ? 'text-text-muted' : colors.text)}>
-          {formatValue(indicator.value)}
+        <span className={cn('text-lg font-bold tabular-nums', isFallback || indicator.noData ? 'text-text-muted' : colors.text)}>
+          {indicator.noData ? 'N/D' : formatValue(indicator.value)}
         </span>
-        <span className={cn('text-xs tabular-nums', isFallback ? 'text-text-muted' : colors.text)}>
-          {indicator.changePercent >= 0 ? '+' : ''}
-          {indicator.changePercent?.toFixed(1)}%
-        </span>
+        {!indicator.noData && (
+          <span className={cn('text-sm font-medium tabular-nums', isFallback ? 'text-text-muted' : colors.text)}>
+            {indicator.changePercent >= 0 ? '+' : ''}
+            {indicator.changePercent?.toFixed(1)}%
+          </span>
+        )}
       </div>
     </div>
   );
@@ -157,30 +159,32 @@ export function MiniDollarCard({
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-3 py-2 rounded-lg border transition-colors',
+        'flex items-center gap-3 px-3 py-3 rounded-lg border transition-colors',
         colors.bg,
         colors.border,
         className
       )}
     >
-      <TrendIcon className={cn('w-4 h-4 flex-shrink-0', colors.value)} />
+      <TrendIcon className={cn('w-5 h-5 flex-shrink-0', colors.value)} />
       
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-text-secondary dark:text-slate-300 truncate">
+        <div className="text-sm font-semibold text-text-primary dark:text-white truncate mb-0.5">
           {name}
         </div>
         <div className="flex items-baseline gap-2">
-          <span className={cn('text-sm font-bold tabular-nums', colors.value)}>
+          <span className={cn('text-xl font-bold tabular-nums', colors.value)}>
             ${formatNumber(sell, { decimals: 0 })}
           </span>
-          <span className="text-2xs text-text-muted dark:text-slate-400">
+          <span className="text-xs text-text-muted dark:text-slate-400">
             C: ${formatNumber(buy, { decimals: 0 })}
           </span>
         </div>
       </div>
 
-      <div className={cn('text-xs font-medium tabular-nums', colors.change)}>
-        {changePercent >= 0 ? '+' : ''}{changePercent?.toFixed(1)}%
+      <div className="text-right">
+        <div className={cn('text-sm font-bold tabular-nums', colors.change)}>
+          {changePercent >= 0 ? '+' : ''}{changePercent?.toFixed(1)}%
+        </div>
       </div>
     </div>
   );

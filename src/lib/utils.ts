@@ -221,3 +221,76 @@ export function isValidValue(value: unknown): boolean {
   if (typeof value === 'number' && isNaN(value)) return false;
   return true;
 }
+
+/**
+ * Convert simple Markdown to HTML for rendering editorial articles.
+ * Handles: headings, bold, italic, images, links, blockquotes, 
+ * code, lists, horizontal rules, and paragraphs.
+ */
+export function markdownToHtml(md: string): string {
+  if (!md) return '';
+
+  // If content already contains HTML tags, return as-is
+  if (/<[a-z][\s\S]*>/i.test(md) && (md.includes('<p>') || md.includes('<div>') || md.includes('<h'))) {
+    return md;
+  }
+
+  let html = md
+    // Escape HTML entities (but preserve existing image/link markdown)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Headings (process before paragraphs)
+    .replace(/^#### (.+)$/gm, '<h4 class="text-base font-bold mt-6 mb-2 text-text-primary">$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold mt-6 mb-2 text-text-primary">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-8 mb-3 text-text-primary">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-8 mb-3 text-text-primary">$1</h1>')
+    // Horizontal rules
+    .replace(/^---$/gm, '<hr class="my-6 border-border" />')
+    // Images (before links to avoid conflict)
+    .replace(
+      /!\[([^\]]*)\]\(([^)]+)\)/g,
+      '<figure class="my-6"><img src="$2" alt="$1" class="rounded-lg w-full" loading="lazy" /><figcaption class="text-center text-xs text-text-muted mt-2">$1</figcaption></figure>'
+    )
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-accent hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+    // Bold & Italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Blockquotes
+    .replace(/^&gt; (.+)$/gm, '<blockquote class="border-l-4 border-accent pl-4 my-4 italic text-text-secondary">$1</blockquote>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code class="bg-surface-secondary px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+    // Unordered lists (consecutive lines starting with -)
+    .replace(/^- (.+)$/gm, '<li class="ml-6 list-disc text-text-secondary">$1</li>')
+    // Ordered lists (consecutive lines starting with number.)
+    .replace(/^\d+\. (.+)$/gm, '<li class="ml-6 list-decimal text-text-secondary">$1</li>');
+
+  // Wrap consecutive <li> elements in <ul> or <ol>
+  html = html.replace(
+    /(<li class="ml-6 list-disc[^"]*">[\s\S]*?<\/li>(\n)?)+/g,
+    (match) => `<ul class="my-4 space-y-1">${match}</ul>`
+  );
+  html = html.replace(
+    /(<li class="ml-6 list-decimal[^"]*">[\s\S]*?<\/li>(\n)?)+/g,
+    (match) => `<ol class="my-4 space-y-1">${match}</ol>`
+  );
+
+  // Wrap remaining text in paragraphs (split by double newlines)
+  const blocks = html.split(/\n\n+/);
+  html = blocks
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      // Don't wrap if already a block element
+      if (/^<(h[1-6]|hr|blockquote|figure|ul|ol|div|p)[\s/>]/i.test(trimmed)) {
+        return trimmed;
+      }
+      // Replace single newlines with <br> within paragraphs
+      return `<p class="text-text-secondary leading-relaxed mb-4">${trimmed.replace(/\n/g, '<br />')}</p>`;
+    })
+    .join('\n');
+
+  return html;
+}

@@ -8,7 +8,7 @@ import { cache } from './cache';
 import { prisma } from '@/lib/db/prisma';
 import { scraperManager } from './scrapers';
 import { generateNewsSummary, generateNewsImage, isAIAvailable } from './ai';
-import { getProcessedNews, isArticleRelevant, type ProcessedNews } from './news-processor';
+import { getProcessedNews, isArticleRelevant, scrapeArticleContent, type ProcessedNews } from './news-processor';
 import type { ScrapedArticle } from './scrapers/types';
 
 // ============================================
@@ -193,6 +193,7 @@ async function fetchExternalArticles(): Promise<NewsArticle[]> {
         isExternal: true,
         aiSummary: article.aiSummary,
         aiKeyPoints: article.aiKeyPoints,
+        aiImageUrl: article.aiImageUrl || undefined,
         content: article.originalContent,
       }));
     }
@@ -244,6 +245,7 @@ async function fetchExternalArticles(): Promise<NewsArticle[]> {
         isExternal: true,
         aiSummary: article.aiSummary,
         aiKeyPoints: article.aiKeyPoints,
+        aiImageUrl: article.aiImageUrl || undefined,
         content: article.originalContent,
       }));
     }
@@ -335,8 +337,19 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
 
   // If article already has AI summary (from processed store), use it
   if (article.aiSummary && article.aiSummary !== article.excerpt) {
+    // Even with pre-processed summary, ensure we have a real image
+    let imageUrl = article.imageUrl;
+    if (article.isExternal && article.sourceUrl && (!imageUrl || imageUrl.includes('unsplash.com'))) {
+      try {
+        const scraped = await scrapeArticleContent(article.sourceUrl);
+        if (scraped.imageUrl) {
+          imageUrl = scraped.imageUrl;
+        }
+      } catch { /* ignore */ }
+    }
     return {
       ...article,
+      imageUrl,
       aiSummary: article.aiSummary,
       aiKeyPoints: article.aiKeyPoints || [],
     };
@@ -350,15 +363,55 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
       article.source
     );
     
-    const aiImage = await generateNewsImage(article.title, article.category);
+    // Check if we have a real source image (not an Unsplash fallback)
+    let realImageUrl = article.imageUrl && !article.imageUrl.includes('unsplash.com')
+      ? article.imageUrl
+      : undefined;
+
+    // If no real image, try scraping og:image from the source URL
+    if (!realImageUrl && article.sourceUrl) {
+      try {
+        console.log(`[NewsService] Scraping og:image for: ${article.title.slice(0, 50)}...`);
+        const scraped = await scrapeArticleContent(article.sourceUrl);
+        if (scraped.imageUrl) {
+          realImageUrl = scraped.imageUrl;
+          console.log(`[NewsService] ✅ Got og:image: ${realImageUrl.slice(0, 80)}...`);
+        }
+      } catch (err) {
+        console.warn('[NewsService] Failed to scrape og:image:', err);
+      }
+    }
+
+    // Fall back to AI image generation only if we still don't have a real image
+    const aiImage = realImageUrl ? undefined : await generateNewsImage(article.title, article.category);
 
     return {
       ...article,
+      imageUrl: realImageUrl || article.imageUrl,
       aiSummary: summary?.summary || article.excerpt,
       aiKeyPoints: summary?.keyPoints || [],
       aiRelevance: summary?.relevance,
       aiSentiment: summary?.sentiment,
-      aiImageUrl: aiImage,
+      aiImageUrl: aiImage || article.aiImageUrl,
+    };
+  }
+
+  // For external articles without AI, still try to get real image
+  if (article.isExternal && article.sourceUrl) {
+    let imageUrl = article.imageUrl;
+    if (!imageUrl || imageUrl.includes('unsplash.com')) {
+      try {
+        const scraped = await scrapeArticleContent(article.sourceUrl);
+        if (scraped.imageUrl) {
+          imageUrl = scraped.imageUrl;
+        }
+      } catch { /* ignore */ }
+    }
+    return {
+      ...article,
+      imageUrl,
+      aiSummary: article.content || article.excerpt,
+      aiKeyPoints: [],
     };
   }
 

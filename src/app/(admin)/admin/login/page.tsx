@@ -166,7 +166,7 @@ function LoginForm() {
                   <strong>Email:</strong> admin@rosariofinanzas.com.ar
                 </p>
                 <p>
-                  <strong>Password:</strong> admin123
+                  <strong>Password:</strong> WenCri123$
                 </p>
               </div>
             </div>
