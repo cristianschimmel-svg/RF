@@ -177,7 +177,7 @@ export default async function ArticlePage({ params }: PageProps) {
             {/* Featured Image */}
             <div className="relative aspect-video rounded-xl overflow-hidden mb-8 shadow-lg">
               <Image
-                src={article.imageUrl || article.aiImageUrl}
+                src={article.imageUrl || article.aiImageUrl || '/banners/Rosario Finanzas Logo.png'}
                 alt={article.title}
                 fill
                 className="object-cover"
