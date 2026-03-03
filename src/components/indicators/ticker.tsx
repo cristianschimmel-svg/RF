@@ -139,7 +139,7 @@ export function EnhancedTicker({
   return (
     <div
       className={cn(
-        'relative h-10 bg-slate-900 border-b border-slate-700 overflow-hidden',
+        'relative h-8 bg-slate-900 border-b border-slate-700 overflow-hidden',
         className
       )}
     >
@@ -174,16 +174,16 @@ function EnhancedTickerItemComponent({ item }: { item: EnhancedTickerItem }) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-5 border-r border-slate-700">
-      <span className="text-xs text-slate-400 font-medium">{item.label}</span>
+    <div className="flex items-center gap-1.5 px-3 border-r border-slate-700">
+      <span className="text-[11px] text-slate-400 font-medium">{item.label}</span>
       {item.sparklineData && item.sparklineData.length > 1 && (
         <MiniSparkline data={item.sparklineData} trend={item.trend} />
       )}
-      <span className="text-sm font-semibold text-data text-white">
+      <span className="text-xs font-semibold text-data text-white">
         {item.value}
       </span>
       {item.change && (
-        <span className={cn('text-xs font-medium text-data', trendColors[item.trend])}>
+        <span className={cn('text-[11px] font-medium text-data', trendColors[item.trend])}>
           {item.change}
         </span>
       )}

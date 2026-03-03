@@ -37,7 +37,7 @@ export function GlobalTicker({ className }: GlobalTickerProps) {
 
   if (isLoading || tickerItems.length === 0) {
     return (
-      <div className="h-10 bg-bg-secondary dark:bg-slate-950 border-b border-border-muted dark:border-slate-800 animate-pulse" />
+      <div className="h-8 bg-bg-secondary dark:bg-slate-950 border-b border-border-muted dark:border-slate-800 animate-pulse" />
     );
   }
 

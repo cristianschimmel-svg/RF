@@ -43,7 +43,7 @@ export function Header() {
       
       <div className="max-w-7xl mx-auto px-4">
         {/* Main Header Row — Logo prominente + utilidades */}
-        <div className="flex items-center justify-between py-3 md:py-4">
+        <div className="flex items-center justify-between py-1.5 md:py-2">
           {/* Left: Dark mode toggle (mobile) / Weather (desktop) */}
           <div className="flex items-center gap-2 w-32 md:w-48">
             <div className="hidden lg:block">
@@ -55,8 +55,8 @@ export function Header() {
           </div>
 
           {/* Center: Logo — protagonista */}
-          <Link href="/" className="flex flex-col items-center gap-1 group">
-            <div className="relative h-10 w-48 md:h-14 md:w-72 lg:h-16 lg:w-80">
+          <Link href="/" className="flex flex-col items-center group">
+            <div className="relative h-14 w-60 md:h-16 md:w-96 lg:h-20 lg:w-[440px]">
               <Image
                 src="/banners/Rosario%20Finanzas%20Logo.png"
                 alt="Rosario Finanzas"
@@ -65,9 +65,6 @@ export function Header() {
                 priority
               />
             </div>
-            <span className="hidden md:block text-[10px] md:text-xs text-text-muted dark:text-slate-500 tracking-widest uppercase">
-              Economía &amp; Finanzas — Rosario y Región
-            </span>
           </Link>
 
           {/* Right: Dark mode toggle (desktop) */}
