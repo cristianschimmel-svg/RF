@@ -10,6 +10,7 @@ jobs:
     name: Deploy via SSH
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: RF
 
     steps:
       - name: Checkout code
