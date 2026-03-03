@@ -533,6 +533,34 @@ docker build -t rosario-finanzas .
 docker run -p 3000:3000 --env-file .env rosario-finanzas
 ```
 
+### VPS (SSH) — Despliegue automatizado (actual servidor)
+
+Se recomienda configurar acceso por clave SSH al VPS para poder ejecutar despliegues sin ingresar contraseña interactivamente.
+
+1. Generar clave SSH en la máquina local (si no existe):
+```bash
+ssh-keygen -t ed25519 -C "deploy@rosariofinanzas" -f ~/.ssh/rosario_deploy
+```
+2. Copiar la clave pública al servidor (añadir a `/root/.ssh/authorized_keys`):
+```bash
+ssh-copy-id -i ~/.ssh/rosario_deploy.pub root@163.245.218.52
+```
+3. Probar conexión sin contraseña:
+```bash
+ssh -i ~/.ssh/rosario_deploy root@163.245.218.52 "echo connected"
+```
+4. Ejecutar el script `update.sh` de forma no interactiva usando la clave:
+```bash
+ssh -i ~/.ssh/rosario_deploy root@163.245.218.52 "cd /opt/rosario-finanzas && ./update.sh"
+```
+
+Alternativa (no recomendada por seguridad): usar `sshpass` para pasar la contraseña en la línea de comandos (evitar en CI/public logs):
+```bash
+sshpass -p 'RosarioFinanzas2026' ssh root@163.245.218.52 "cd /opt/rosario-finanzas && ./update.sh"
+```
+
+GitHub Actions: para despliegues automatizados desde el repo, configurar una Action que use una `deploy` SSH key (llave privada almacenada en Secrets) y ejecute el comando remoto del `update.sh`.
+
 ---
 
 ## 📄 Licencia
