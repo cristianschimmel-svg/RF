@@ -28,5 +28,8 @@ jobs:
             set -e
             echo "=== Iniciando deploy de Rosario Finanzas ==="
             cd /opt/rosario-finanzas
+            # Clean untracked files that conflict with incoming changes
+            git checkout -- . 2>/dev/null || true
+            git clean -fd scripts/ 2>/dev/null || true
             ./update.sh
             echo "=== Deploy completado ==="
