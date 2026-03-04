@@ -13,6 +13,15 @@ const nextConfig = {
       bodySizeLimit: '6mb',
     },
   },
+  // Rewrite /uploads/* to API route so dynamically uploaded files are served
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:filename',
+        destination: '/api/uploads/:filename',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

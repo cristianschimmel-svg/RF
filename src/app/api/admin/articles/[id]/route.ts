@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
 import { invalidateNewsCache } from '@/lib/services/news-service';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 const articleSchema = z.object({
@@ -147,6 +148,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Invalidate cache so changes appear immediately
     invalidateNewsCache();
+    revalidatePath('/');
+    revalidatePath('/noticias');
+    revalidatePath('/informes-especiales');
+    if (article.slug) revalidatePath(`/noticias/${article.slug}`);
 
     return NextResponse.json(article);
   } catch (error) {
@@ -200,6 +205,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Invalidate cache so deletion is reflected immediately
     invalidateNewsCache();
+    revalidatePath('/');
+    revalidatePath('/noticias');
+    revalidatePath('/informes-especiales');
+    if (article.slug) revalidatePath(`/noticias/${article.slug}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

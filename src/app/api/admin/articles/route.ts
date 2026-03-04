@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
 import { invalidateNewsCache } from '@/lib/services/news-service';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 const articleSchema = z.object({
@@ -88,6 +89,9 @@ export async function POST(request: NextRequest) {
 
     // Invalidate news cache so the new article appears immediately
     invalidateNewsCache();
+    revalidatePath('/');
+    revalidatePath('/noticias');
+    revalidatePath('/informes-especiales');
 
     return NextResponse.json(article, { status: 201 });
   } catch (error) {

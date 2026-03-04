@@ -247,7 +247,7 @@ export async function getAllNews(): Promise<NewsArticle[]> {
     ...externalArticles.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()),
   ];
 
-  cache.set(cacheKey, allArticles, 120); // Cache 2 minutes
+  cache.set(cacheKey, allArticles, 30); // Cache 30 seconds (short to reflect admin changes quickly)
   return allArticles;
 }
 
