@@ -5,7 +5,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge, VariationBadge } from '@/components/ui/badge';
 import { SkeletonIndicatorCard } from '@/components/ui/skeleton';
-import { LeaderboardBanner, SidebarBanners, InlineBanner } from '@/components/ads';
+import { LeaderboardBanner, SidebarBanners, InlineBanner, HeroBanner } from '@/components/ads';
 import { ArgentinaMarketWidget } from '@/components/indicators/argentina-market';
 import { EditorialSection } from '@/components/news/editorial-section';
 import { LatestNewsSection } from '@/components/news/latest-news-section';
@@ -92,7 +92,7 @@ export default async function HomePage() {
                 </div>
               }
             >
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                 {overview.dollarQuotes.map((quote) => (
                   <MiniDollarCard
                     key={quote.type}
@@ -257,6 +257,11 @@ export default async function HomePage() {
 
           {/* Right Column - Quick Links, News Sidebar & Info */}
           <div className="lg:col-span-4 space-y-4">
+            {/* Magic Brain Banner */}
+            <div className="hidden lg:block">
+              <HeroBanner />
+            </div>
+
             {/* Data Disclaimer */}
             <Card variant="outlined" className="bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-900/30">
               <CardContent>

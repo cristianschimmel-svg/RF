@@ -159,30 +159,30 @@ export function MiniDollarCard({
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-3 py-3 rounded-lg border transition-colors',
+        'flex items-center gap-2 px-2 py-2 rounded-lg border transition-colors',
         colors.bg,
         colors.border,
         className
       )}
     >
-      <TrendIcon className={cn('w-5 h-5 flex-shrink-0', colors.value)} />
+      <TrendIcon className={cn('w-4 h-4 flex-shrink-0', colors.value)} />
       
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-text-primary dark:text-white truncate mb-0.5">
+        <div className="text-xs font-semibold text-text-primary dark:text-white truncate">
           {name}
         </div>
-        <div className="flex items-baseline gap-2">
-          <span className={cn('text-xl font-bold tabular-nums', colors.value)}>
+        <div className="flex items-baseline gap-1.5">
+          <span className={cn('text-base font-bold tabular-nums', colors.value)}>
             ${formatNumber(sell, { decimals: 0 })}
           </span>
-          <span className="text-xs text-text-muted dark:text-slate-400">
+          <span className="text-2xs text-text-muted dark:text-slate-400">
             C: ${formatNumber(buy, { decimals: 0 })}
           </span>
         </div>
       </div>
 
       <div className="text-right">
-        <div className={cn('text-sm font-bold tabular-nums', colors.change)}>
+        <div className={cn('text-xs font-bold tabular-nums', colors.change)}>
           {changePercent >= 0 ? '+' : ''}{changePercent?.toFixed(1)}%
         </div>
       </div>

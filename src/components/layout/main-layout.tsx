@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { HeroBanner, MiniBannerRow, AfipBadge } from '@/components/ads';
+import { MiniBannerRow, AfipBadge } from '@/components/ads';
 import { GlobalTicker } from '@/components/layout/global-ticker';
 import { WeatherDateTime } from '@/components/layout/weather-datetime';
 import { Moon, Sun } from 'lucide-react';
@@ -36,14 +36,9 @@ export function Header() {
 
   return (
     <header className="bg-surface-elevated dark:bg-black border-b border-border dark:border-slate-800">
-      {/* Top Banner - Hero Position - Solo en desktop */}
-      <div className="hidden lg:block border-b border-border-muted dark:border-slate-800">
-        <HeroBanner />
-      </div>
-      
       <div className="max-w-7xl mx-auto px-4">
         {/* Main Header Row — Logo prominente + utilidades */}
-        <div className="flex items-center justify-between py-0">
+        <div className="flex items-center justify-between py-2">
           {/* Left: Dark mode toggle (mobile) / Weather (desktop) */}
           <div className="flex items-center gap-2 w-16 md:w-36">
             <div className="hidden lg:block">
@@ -56,9 +51,9 @@ export function Header() {
 
           {/* Center: Logo — protagonista */}
           <Link href="/" className="flex flex-col items-center group">
-            <div className="relative h-12 w-64 md:h-14 md:w-80 lg:h-16 lg:w-[420px]">
+            <div className="relative h-10 w-56 md:h-12 md:w-72 lg:h-14 lg:w-[380px]">
               <Image
-                src="/banners/Rosario%20Finanzas%20Logo.png"
+                src="/banners/Rosario%20Finanzas%20Logo_nuevo.png"
                 alt="Rosario Finanzas"
                 fill
                 className="object-contain dark:mix-blend-screen"
@@ -110,9 +105,9 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="block mb-4">
-              <div className="relative h-12 w-52 dark:brightness-110">
+              <div className="relative h-14 w-72 dark:brightness-110">
                 <Image
-                  src="/banners/Rosario%20Finanzas%20Logo.png"
+                  src="/banners/Rosario%20Finanzas%20Logo_nuevo.png"
                   alt="Rosario Finanzas"
                   fill
                   className="object-contain object-left"

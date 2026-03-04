@@ -4,6 +4,7 @@ import { Badge, VariationBadge } from '@/components/ui/badge';
 import { SkeletonIndicatorCard } from '@/components/ui/skeleton';
 import { getDollarQuotes } from '@/lib/services/indicator-service';
 import { fetchBCRAHistory } from '@/lib/services/connectors/bcra';
+import { fetchCurrencyQuotes } from '@/lib/services/connectors/currencies';
 import { Sparkline } from '@/components/indicators/sparkline';
 import {
   DollarSign,
@@ -14,8 +15,9 @@ import {
   Clock,
   AlertTriangle,
   Info,
+  Globe,
 } from 'lucide-react';
-import type { DollarQuote, Trend } from '@/types';
+import type { DollarQuote, Trend, CurrencyQuote } from '@/types';
 
 export const revalidate = 60;
 
@@ -29,6 +31,9 @@ export default async function DolarPage() {
 
   // Fetch historical for charts (TC Mayorista from BCRA variable 4)
   const historicalMayorista = await fetchBCRAHistory(4, 30);
+
+  // Fetch foreign currency quotes
+  const { currencies: foreignCurrencies } = await fetchCurrencyQuotes();
 
   const oficial = quotes.find(q => q.type === 'oficial');
   const blue = quotes.find(q => q.type === 'blue');
@@ -133,6 +138,24 @@ export default async function DolarPage() {
               <span>Hace 30 días: ${historicalMayorista[0]?.toLocaleString('es-AR')}</span>
               <span>Actual: ${historicalMayorista[historicalMayorista.length - 1]?.toLocaleString('es-AR')}</span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Foreign Currencies Section */}
+      {foreignCurrencies.length > 0 && (
+        <Card>
+          <CardHeader title="Otras Monedas vs Peso Argentino" />
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {foreignCurrencies.map((currency) => (
+                <CurrencyCard key={currency.code} currency={currency} />
+              ))}
+            </div>
+            <p className="text-2xs text-text-muted dark:text-slate-500 mt-3 flex items-center gap-1">
+              <Globe className="w-3 h-3" />
+              Cotizaciones oficiales del BCRA para divisas extranjeras.
+            </p>
           </CardContent>
         </Card>
       )}
@@ -282,6 +305,41 @@ function BrechaRow({ label, value }: { label: string; value: number }) {
         <span className={`text-xs font-mono font-medium ${value > 10 ? 'text-amber-600 dark:text-amber-400' : 'text-text-primary dark:text-white'}`}>
           {value > 0 ? '+' : ''}{value.toFixed(1)}%
         </span>
+      </div>
+    </div>
+  );
+}
+
+function CurrencyCard({ currency }: { currency: CurrencyQuote }) {
+  return (
+    <div className="rounded-lg border border-border dark:border-slate-700 bg-surface dark:bg-slate-900/50 p-4 hover:bg-interactive-hover dark:hover:bg-slate-800/50 transition-colors">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-2xl">{currency.flag}</span>
+        <div>
+          <h3 className="text-sm font-bold text-text-primary dark:text-white">{currency.name}</h3>
+          <span className="text-xs text-text-muted dark:text-slate-400">{currency.code}/ARS</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-xs text-text-muted dark:text-slate-400 mb-0.5">Compra</p>
+          <p className="text-lg font-bold font-mono text-text-primary dark:text-white">
+            {currency.buy > 0 ? `$${currency.buy.toLocaleString('es-AR', { maximumFractionDigits: 2 })}` : '—'}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-text-muted dark:text-slate-400 mb-0.5">Venta</p>
+          <p className="text-lg font-bold font-mono text-text-primary dark:text-white">
+            ${currency.sell.toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-2 pt-2 border-t border-border-muted dark:border-slate-700/50">
+        <p className="text-2xs text-text-muted dark:text-slate-500">
+          Actualizado: {new Date(currency.lastUpdated).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+        </p>
       </div>
     </div>
   );
