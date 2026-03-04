@@ -90,29 +90,29 @@ const FALLBACK_DATA: MarketSummary = {
     {
       symbol: 'GENERAL',
       name: 'S&P BYMA Índice General',
-      value: 119490491.58,
-      change: -1106699.74,
+      value: 106744.77,
+      change: -1106.70,
       changePercent: -0.92,
-      high: 121364471.36,
-      low: 118132979.4,
-      previousClose: 120597191.32,
+      high: 108200.00,
+      low: 105800.00,
+      previousClose: 107851.47,
       timestamp: new Date(),
     },
   ],
   topGainers: [
-    { symbol: 'GGAL', name: 'Grupo Galicia', price: 890.50, change: 45.20, changePercent: 5.35, volume: 12500000, high: 895, low: 845, open: 850, previousClose: 845.30, timestamp: new Date() },
-    { symbol: 'YPF', name: 'YPF S.A.', price: 25500.00, change: 1100.00, changePercent: 4.51, volume: 8900000, high: 25800, low: 24400, open: 24500, previousClose: 24400, timestamp: new Date() },
-    { symbol: 'BBAR', name: 'BBVA Argentina', price: 456.75, change: 18.25, changePercent: 4.16, volume: 6700000, high: 460, low: 438, open: 440, previousClose: 438.50, timestamp: new Date() },
+    { symbol: 'GGAL', name: 'Grupo Galicia', price: 6520, change: 120, changePercent: 1.87, volume: 12500000, high: 6580, low: 6400, open: 6400, previousClose: 6400, timestamp: new Date() },
+    { symbol: 'YPFD', name: 'YPF S.A.', price: 50800, change: 1800, changePercent: 3.67, volume: 8900000, high: 51200, low: 49000, open: 49000, previousClose: 49000, timestamp: new Date() },
+    { symbol: 'BBAR', name: 'BBVA Argentina', price: 6855, change: 255, changePercent: 3.86, volume: 6700000, high: 6900, low: 6600, open: 6600, previousClose: 6600, timestamp: new Date() },
   ],
   topLosers: [
-    { symbol: 'TXAR', name: 'Ternium Argentina', price: 1280.00, change: -65.00, changePercent: -4.83, volume: 3200000, high: 1350, low: 1275, open: 1345, previousClose: 1345, timestamp: new Date() },
-    { symbol: 'ALUA', name: 'Aluar', price: 520.00, change: -22.50, changePercent: -4.15, volume: 4100000, high: 545, low: 518, open: 542, previousClose: 542.50, timestamp: new Date() },
-    { symbol: 'TECO2', name: 'Telecom Argentina', price: 890.25, change: -35.75, changePercent: -3.86, volume: 5500000, high: 930, low: 885, open: 925, previousClose: 926, timestamp: new Date() },
+    { symbol: 'TXAR', name: 'Ternium Argentina', price: 598, change: -22, changePercent: -3.55, volume: 3200000, high: 625, low: 595, open: 620, previousClose: 620, timestamp: new Date() },
+    { symbol: 'ALUA', name: 'Aluar', price: 725, change: -25, changePercent: -3.33, volume: 4100000, high: 755, low: 720, open: 750, previousClose: 750, timestamp: new Date() },
+    { symbol: 'TECO2', name: 'Telecom Argentina', price: 3365, change: -135, changePercent: -3.86, volume: 5500000, high: 3520, low: 3350, open: 3500, previousClose: 3500, timestamp: new Date() },
   ],
   mostActive: [
-    { symbol: 'GGAL', name: 'Grupo Galicia', price: 890.50, change: 45.20, changePercent: 5.35, volume: 12500000, high: 895, low: 845, open: 850, previousClose: 845.30, timestamp: new Date() },
-    { symbol: 'YPF', name: 'YPF S.A.', price: 25500.00, change: 1100.00, changePercent: 4.51, volume: 8900000, high: 25800, low: 24400, open: 24500, previousClose: 24400, timestamp: new Date() },
-    { symbol: 'BBAR', name: 'BBVA Argentina', price: 456.75, change: 18.25, changePercent: 4.16, volume: 6700000, high: 460, low: 438, open: 440, previousClose: 438.50, timestamp: new Date() },
+    { symbol: 'GGAL', name: 'Grupo Galicia', price: 6520, change: 120, changePercent: 1.87, volume: 12500000, high: 6580, low: 6400, open: 6400, previousClose: 6400, timestamp: new Date() },
+    { symbol: 'YPFD', name: 'YPF S.A.', price: 50800, change: 1800, changePercent: 3.67, volume: 8900000, high: 51200, low: 49000, open: 49000, previousClose: 49000, timestamp: new Date() },
+    { symbol: 'BBAR', name: 'BBVA Argentina', price: 6855, change: 255, changePercent: 3.86, volume: 6700000, high: 6900, low: 6600, open: 6600, previousClose: 6600, timestamp: new Date() },
   ],
   totalVolume: 50884858017.31,
   marketStatus: 'closed',
@@ -218,7 +218,8 @@ async function fetchMarketIndices(): Promise<MarketIndex[]> {
     
     if (merval) {
       // Generate GENERAL index based on MERVAL (approximate ratio)
-      const generalRatio = 40.9; // Approximate historical ratio
+      // GENERAL/MERVAL ≈ 0.041 (e.g., GENERAL ~106K when MERVAL ~2.6M)
+      const generalRatio = 0.041;
       const generalValue = merval.value * generalRatio;
       const generalChange = merval.change * generalRatio;
       
@@ -246,27 +247,88 @@ async function fetchMarketIndices(): Promise<MarketIndex[]> {
 }
 
 /**
- * Get leader stocks (uses fallback data with simulated variations)
+ * BYMA leader stocks with Yahoo Finance symbols
  */
-function getLeaderStocksData(): StockQuote[] {
-  // Return fallback data with slight random variations to simulate live data
-  const addVariation = (base: number, percent: number = 2): number => {
-    return base * (1 + (Math.random() - 0.5) * percent / 100);
-  };
+const LEADER_STOCKS = [
+  { yahoo: 'GGAL.BA', symbol: 'GGAL', name: 'Grupo Galicia' },
+  { yahoo: 'YPFD.BA', symbol: 'YPFD', name: 'YPF S.A.' },
+  { yahoo: 'BBAR.BA', symbol: 'BBAR', name: 'BBVA Argentina' },
+  { yahoo: 'PAMP.BA', symbol: 'PAMP', name: 'Pampa Energía' },
+  { yahoo: 'TXAR.BA', symbol: 'TXAR', name: 'Ternium Argentina' },
+  { yahoo: 'ALUA.BA', symbol: 'ALUA', name: 'Aluar' },
+  { yahoo: 'TECO2.BA', symbol: 'TECO2', name: 'Telecom Argentina' },
+  { yahoo: 'SUPV.BA', symbol: 'SUPV', name: 'Supervielle' },
+  { yahoo: 'COME.BA', symbol: 'COME', name: 'Soc. Comercial del Plata' },
+  { yahoo: 'CRES.BA', symbol: 'CRES', name: 'Cresud' },
+];
 
+/**
+ * Fetch a single stock quote from Yahoo Finance
+ */
+async function fetchStockFromYahoo(yahooSymbol: string, localSymbol: string, name: string): Promise<StockQuote | null> {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.yahoo.baseUrl}/${yahooSymbol}?interval=1d&range=1d`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+        next: { revalidate: API_CONFIG.cacheTTL },
+      }
+    );
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+
+    const currentPrice = meta.regularMarketPrice;
+    const previousClose = meta.chartPreviousClose || meta.previousClose || currentPrice;
+    const change = currentPrice - previousClose;
+    const changePercent = previousClose ? (change / previousClose) * 100 : 0;
+
+    return {
+      symbol: localSymbol,
+      name,
+      price: currentPrice,
+      change,
+      changePercent,
+      volume: meta.regularMarketVolume || 0,
+      high: meta.regularMarketDayHigh || currentPrice,
+      low: meta.regularMarketDayLow || currentPrice,
+      open: meta.regularMarketOpen || currentPrice,
+      previousClose,
+      timestamp: new Date(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch real leader stocks data from Yahoo Finance (with fallback)
+ */
+async function fetchLeaderStocksData(): Promise<StockQuote[]> {
+  try {
+    const promises = LEADER_STOCKS.map(s => fetchStockFromYahoo(s.yahoo, s.symbol, s.name));
+    const results = await Promise.allSettled(promises);
+    
+    const stocks = results
+      .map(r => r.status === 'fulfilled' ? r.value : null)
+      .filter((s): s is StockQuote => s !== null);
+
+    if (stocks.length >= 3) {
+      return stocks;
+    }
+  } catch (error) {
+    console.error('Error fetching leader stocks:', error);
+  }
+
+  // Fallback to static data
   return [
-    ...FALLBACK_DATA.topGainers.map(s => ({
-      ...s,
-      price: addVariation(s.price),
-      changePercent: addVariation(s.changePercent, 20),
-      timestamp: new Date(),
-    })),
-    ...FALLBACK_DATA.topLosers.map(s => ({
-      ...s,
-      price: addVariation(s.price),
-      changePercent: addVariation(s.changePercent, 20),
-      timestamp: new Date(),
-    })),
+    ...FALLBACK_DATA.topGainers,
+    ...FALLBACK_DATA.topLosers,
   ];
 }
 
@@ -282,8 +344,10 @@ export async function getMarketSummary(): Promise<MarketSummary> {
   }
 
   try {
-    const indices = await fetchMarketIndices();
-    const leaders = getLeaderStocksData();
+    const [indices, leaders] = await Promise.all([
+      fetchMarketIndices(),
+      fetchLeaderStocksData(),
+    ]);
     
     // Check if we got real data from Yahoo
     const isRealData = indices.length > 0 && indices[0].symbol === 'MERVAL' && 

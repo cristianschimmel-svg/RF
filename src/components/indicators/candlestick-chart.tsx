@@ -78,18 +78,45 @@ export function CandlestickChart({ symbol, title, height = 350, className }: Can
       try {
         setIsLoading(true);
         
+        // Fetch real historical data from API
+        let chartData: OHLCData[];
+        try {
+          const res = await fetch(`/api/market/historical?symbol=${symbol}&period=3M`);
+          if (res.ok) {
+            const rawData = await res.json();
+            chartData = rawData
+              .filter((d: any) => d.close != null)
+              .map((d: any) => ({
+                time: new Date(d.date).toISOString().split('T')[0],
+                open: d.open,
+                high: d.high,
+                low: d.low,
+                close: d.close,
+                volume: d.volume || 0,
+              }))
+              // Deduplicate by date (keep last occurrence)
+              .filter((d: OHLCData, i: number, arr: OHLCData[]) => 
+                i === arr.length - 1 || arr[i + 1].time !== d.time
+              );
+          } else {
+            throw new Error('API error');
+          }
+        } catch {
+          // Fallback to generated data only if API fails
+          chartData = generateSampleData(2600000, 90);
+        }
+
+        if (!mounted || !chartContainerRef.current || chartData.length === 0) return;
+
         // Dynamic import - lightweight-charts v5
         const lc = await import('lightweight-charts');
         
         if (!mounted || !chartContainerRef.current) return;
-
-        // Generate sample data
-        const sampleData = generateSampleData(318.50, 90);
         
-        // Calculate price change
-        if (sampleData.length >= 2) {
-          const lastBar = sampleData[sampleData.length - 1];
-          const prevBar = sampleData[sampleData.length - 2];
+        // Calculate price change from real data
+        if (chartData.length >= 2) {
+          const lastBar = chartData[chartData.length - 1];
+          const prevBar = chartData[chartData.length - 2];
           const change = lastBar.close - prevBar.close;
           const percent = (change / prevBar.close) * 100;
           setPriceChange({ value: change, percent });
@@ -135,7 +162,7 @@ export function CandlestickChart({ symbol, title, height = 350, className }: Can
         seriesRef.current = candleSeries;
 
         // Set data
-        candleSeries.setData(sampleData.map(d => ({
+        candleSeries.setData(chartData.map(d => ({
           time: d.time,
           open: d.open,
           high: d.high,
@@ -158,8 +185,8 @@ export function CandlestickChart({ symbol, title, height = 350, className }: Can
                 close: data.close,
               });
             }
-          } else if (sampleData.length > 0) {
-            setOhlcData(sampleData[sampleData.length - 1]);
+          } else if (chartData.length > 0) {
+            setOhlcData(chartData[chartData.length - 1]);
           }
         });
 
@@ -199,7 +226,7 @@ export function CandlestickChart({ symbol, title, height = 350, className }: Can
         }
       }
     };
-  }, [isClient, height]);
+  }, [isClient, height, symbol]);
 
   if (error) {
     return (
@@ -217,25 +244,25 @@ export function CandlestickChart({ symbol, title, height = 350, className }: Can
       <div className="px-3 sm:px-4 py-2 border-b border-slate-800">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
           <span className="text-cyan-400 font-medium">
-            {title || symbol} - ORD. 1 V., D
+            {title || symbol}, D
           </span>
           {ohlcData && (
             <>
               <span className="text-slate-500">
-                O<span className="text-slate-300 ml-1">{ohlcData.open.toFixed(2)}</span>
+                O<span className="text-slate-300 ml-1">{ohlcData.open.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</span>
               </span>
               <span className="text-slate-500">
-                H<span className="text-green-400 ml-1">{ohlcData.high.toFixed(2)}</span>
+                H<span className="text-green-400 ml-1">{ohlcData.high.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</span>
               </span>
               <span className="text-slate-500">
-                L<span className="text-red-400 ml-1">{ohlcData.low.toFixed(2)}</span>
+                L<span className="text-red-400 ml-1">{ohlcData.low.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</span>
               </span>
               <span className="text-slate-500">
-                C<span className="text-slate-300 ml-1">{ohlcData.close.toFixed(2)}</span>
+                C<span className="text-slate-300 ml-1">{ohlcData.close.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</span>
               </span>
               {priceChange && (
                 <span className={priceChange.value >= 0 ? 'text-green-400' : 'text-red-400'}>
-                  {priceChange.value >= 0 ? '+' : ''}{priceChange.value.toFixed(2)} ({priceChange.percent >= 0 ? '+' : ''}{priceChange.percent.toFixed(2)}%)
+                  {priceChange.value >= 0 ? '+' : ''}{priceChange.value.toLocaleString('es-AR', { maximumFractionDigits: 2 })} ({priceChange.percent >= 0 ? '+' : ''}{priceChange.percent.toFixed(2)}%)
                 </span>
               )}
             </>
