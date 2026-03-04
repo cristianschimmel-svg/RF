@@ -233,17 +233,25 @@ export function CotizacionesWidget({
         </div>
 
         {/* Featured: Blue + Oficial side by side */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-          {blue && <DollarCardClarin quote={blue} variant="primary" />}
-          {oficial && <DollarCardClarin quote={oficial} variant="primary" />}
-        </div>
+        {sortedDollars.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              {blue && <DollarCardClarin quote={blue} variant="primary" />}
+              {oficial && <DollarCardClarin quote={oficial} variant="primary" />}
+            </div>
 
-        {/* Other dollar types in compact grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-          {otherDollars.map((quote) => (
-            <DollarCardClarin key={quote.type} quote={quote} variant="secondary" />
-          ))}
-        </div>
+            {/* Other dollar types in compact grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+              {otherDollars.map((quote) => (
+                <DollarCardClarin key={quote.type} quote={quote} variant="secondary" />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="text-sm text-text-muted dark:text-gray-400 text-center py-6 border border-dashed border-border-light dark:border-slate-700 rounded-lg">
+            Sin datos de cotizaciones disponibles
+          </div>
+        )}
       </section>
 
       {/* ===== Section: Otras Divisas ===== */}

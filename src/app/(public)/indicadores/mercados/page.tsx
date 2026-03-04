@@ -55,7 +55,7 @@ export default async function MercadosPage() {
 
       {/* Index Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {indices.map((index) => {
+        {indices.length > 0 ? indices.map((index) => {
           const trend: Trend = index.changePercent > 0 ? 'up' : index.changePercent < 0 ? 'down' : 'neutral';
           const colors = {
             up: 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-950/30',
@@ -93,7 +93,11 @@ export default async function MercadosPage() {
               </div>
             </div>
           );
-        })}
+        }) : (
+          <div className="col-span-full text-sm text-text-muted dark:text-gray-400 text-center py-6 border border-dashed border-border-light dark:border-slate-700 rounded-lg">
+            Sin datos de índices disponibles
+          </div>
+        )}
       </div>
 
       {/* Chart */}

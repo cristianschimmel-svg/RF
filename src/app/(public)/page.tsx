@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { MainLayout } from '@/components/layout';
+import { ImagePrefetcher } from '@/components/layout/image-prefetcher';
 import { MiniDollarCard, MiniIndicator, IndicatorSection } from '@/components/indicators/mini-indicator';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -12,6 +13,7 @@ import { LatestNewsSection } from '@/components/news/latest-news-section';
 import { getMarketOverview } from '@/lib/services/indicator-service';
 import { getMarketSummary, getIndexHistorical } from '@/lib/services/byma-service';
 import { getEditorialNews, getExternalNews } from '@/lib/services/unified-news-service';
+import { fetchRiesgoPais } from '@/lib/services/connectors/argentina-datos';
 import { formatRelativeTime } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,21 +29,24 @@ import {
   Clock,
   AlertTriangle,
   Newspaper,
+  Shield,
 } from 'lucide-react';
 
 export const revalidate = 60; // Revalidate every minute
 
 export default async function HomePage() {
-  const [overview, editorialNews, externalNews, marketSummary, mervalHistorical] = await Promise.all([
+  const [overview, editorialNews, externalNews, marketSummary, mervalHistorical, riesgoPais] = await Promise.all([
     getMarketOverview(),
     getEditorialNews(4),
     getExternalNews(8),
     getMarketSummary(),
     getIndexHistorical('MERVAL', '1M'),
+    fetchRiesgoPais(),
   ]);
 
   return (
     <MainLayout>
+      <ImagePrefetcher articles={[...editorialNews, ...externalNews]} />
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         {/* Header - Responsive */}
         <header className="mb-3 sm:mb-4">
@@ -93,7 +98,7 @@ export default async function HomePage() {
               }
             >
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {overview.dollarQuotes.map((quote) => (
+                {overview.dollarQuotes.length > 0 ? overview.dollarQuotes.map((quote) => (
                   <MiniDollarCard
                     key={quote.type}
                     name={quote.name.replace('Dólar ', '')}
@@ -102,7 +107,12 @@ export default async function HomePage() {
                     change={quote.change}
                     changePercent={quote.changePercent}
                   />
-                ))}
+                )) : (
+                  <p className="col-span-full text-sm text-text-muted dark:text-gray-400 text-center py-4">
+                    <AlertTriangle className="w-4 h-4 inline mr-1" />
+                    Sin datos de cotizaciones disponibles
+                  </p>
+                )}
               </div>
             </IndicatorSection>
 
@@ -143,6 +153,24 @@ export default async function HomePage() {
                 </div>
 
                 <TabsContent value="inflacion">
+                  {/* Riesgo País destacado */}
+                  {riesgoPais && (
+                    <div className="mb-3 flex items-center gap-3 p-2.5 rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/60 dark:bg-blue-950/30">
+                      <Shield className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium text-text-muted dark:text-slate-400">Riesgo País (EMBI+)</span>
+                        <span className="ml-2 text-sm font-bold font-mono text-text-primary dark:text-white">
+                          {riesgoPais.value.toLocaleString('es-AR')} pb
+                        </span>
+                        {riesgoPais.change !== 0 && (
+                          <span className={`ml-1.5 text-2xs ${riesgoPais.change > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                            {riesgoPais.change > 0 ? '+' : ''}{riesgoPais.change} pb
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-2xs text-text-muted dark:text-slate-500 flex-shrink-0">JP Morgan</span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                     {overview.groups
                       .find((g) => g.category === 'inflacion')
@@ -210,15 +238,23 @@ export default async function HomePage() {
               }
             >
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                {overview.groups
-                  .find((g) => g.category === 'agro')
-                  ?.indicators.slice(0, 8).map((indicator) => (
+                {(() => {
+                  const agroIndicators = overview.groups
+                    .find((g) => g.category === 'agro')
+                    ?.indicators.slice(0, 8);
+                  return agroIndicators && agroIndicators.length > 0 ? agroIndicators.map((indicator) => (
                     <MiniIndicator
                       key={indicator.id}
                       indicator={indicator}
                       showIcon={true}
                     />
-                  ))}
+                  )) : (
+                    <p className="col-span-full text-sm text-text-muted dark:text-gray-400 text-center py-4">
+                      <AlertTriangle className="w-4 h-4 inline mr-1" />
+                      Sin datos de commodities disponibles
+                    </p>
+                  );
+                })()}
               </div>
             </IndicatorSection>
 
@@ -237,15 +273,23 @@ export default async function HomePage() {
               }
             >
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                {overview.groups
-                  .find((g) => g.category === 'cripto')
-                  ?.indicators.slice(0, 8).map((indicator) => (
+                {(() => {
+                  const cryptoIndicators = overview.groups
+                    .find((g) => g.category === 'cripto')
+                    ?.indicators.slice(0, 8);
+                  return cryptoIndicators && cryptoIndicators.length > 0 ? cryptoIndicators.map((indicator) => (
                     <MiniIndicator
                       key={indicator.id}
                       indicator={indicator}
                       showIcon={true}
                     />
-                  ))}
+                  )) : (
+                    <p className="col-span-full text-sm text-text-muted dark:text-gray-400 text-center py-4">
+                      <AlertTriangle className="w-4 h-4 inline mr-1" />
+                      Sin datos de criptomonedas disponibles
+                    </p>
+                  );
+                })()}
               </div>
             </IndicatorSection>
 

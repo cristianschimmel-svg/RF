@@ -110,50 +110,11 @@ export async function getEthereumPrice(): Promise<Indicator | null> {
   return fetchCryptoBySymbol('ETH');
 }
 
-// Fallback data
+// Empty result when API fails — never return invented prices
 function getFallbackCryptoData(): CryptoResult {
-  const now = new Date().toISOString();
-  
   return {
-    indicators: [
-      {
-        id: 'crypto-bitcoin',
-        name: 'Bitcoin',
-        shortName: 'BTC',
-        category: 'cripto',
-        value: 67500,
-        previousValue: 66200,
-        change: 1300,
-        changePercent: 1.96,
-        unit: 'USD',
-        format: 'currency',
-        decimals: 0,
-        source: 'fallback',
-        lastUpdated: now,
-        frequency: 'realtime',
-        isFallback: true,
-        disclaimer: 'Precio estimado.',
-      },
-      {
-        id: 'crypto-ethereum',
-        name: 'Ethereum',
-        shortName: 'ETH',
-        category: 'cripto',
-        value: 3450,
-        previousValue: 3380,
-        change: 70,
-        changePercent: 2.07,
-        unit: 'USD',
-        format: 'currency',
-        decimals: 0,
-        source: 'fallback',
-        lastUpdated: now,
-        frequency: 'realtime',
-        isFallback: true,
-        disclaimer: 'Precio estimado.',
-      },
-    ],
+    indicators: [],
     source: 'fallback',
-    lastUpdated: now,
+    lastUpdated: new Date().toISOString(),
   };
 }

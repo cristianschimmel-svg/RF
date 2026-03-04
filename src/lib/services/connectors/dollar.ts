@@ -149,61 +149,16 @@ function mapCasaToType(casa: string): DollarType {
   return mapping[casa.toLowerCase()] || 'oficial';
 }
 
-// Fallback data when API fails
+// Empty result when API fails — never return invented data
 function getFallbackDollarData(): DollarFetchResult {
   const now = new Date().toISOString();
   
   return {
-    quotes: [
-      {
-        type: 'oficial',
-        name: 'Dólar Oficial',
-        buy: 1020,
-        sell: 1025,
-        spread: 0.49,
-        change: 0,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-      },
-      {
-        type: 'blue',
-        name: 'Dólar Blue',
-        buy: 1175,
-        sell: 1185,
-        spread: 0.85,
-        change: 0,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-      },
-      {
-        type: 'mep',
-        name: 'Dólar MEP',
-        buy: 1140,
-        sell: 1145,
-        spread: 0.44,
-        change: 0,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-      },
-      {
-        type: 'ccl',
-        name: 'Dólar CCL',
-        buy: 1160,
-        sell: 1170,
-        spread: 0.86,
-        change: 0,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-      },
-    ],
+    quotes: [],
     source: 'fallback',
     lastUpdated: now,
     isFallback: true,
-    disclaimer: 'Datos de respaldo. No se pudieron obtener cotizaciones en tiempo real.',
+    disclaimer: 'Sin datos disponibles. No se pudo conectar con la API de cotizaciones.',
   };
 }
 

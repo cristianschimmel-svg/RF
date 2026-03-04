@@ -293,6 +293,35 @@ export async function fetchInflacionHistorica(meses: number = 12): Promise<{ fec
     return [];
   }
 }
+
+// Historical Riesgo País for charts
+export async function fetchRiesgoPaisHistorico(dias: number = 90): Promise<{ fecha: string; valor: number }[]> {
+  try {
+    const url = `${API_CONFIG.argentinaDatos.baseUrl}${API_CONFIG.argentinaDatos.endpoints.riesgoPais}`;
+
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data: ArgentinaDatosRiesgoPais[] = await response.json();
+
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.slice(-dias);
+
+  } catch (error) {
+    console.error('Error fetching ArgentinaDatos riesgo pais historico:', error);
+    return [];
+  }
+}
+
 // Fetch Plazo Fijo Rates
 export async function fetchTasaPlazoFijo(): Promise<Indicator | null> {
   const cacheKey = 'argentinadatos:plazo-fijo';

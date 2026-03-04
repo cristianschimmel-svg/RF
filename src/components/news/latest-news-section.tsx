@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatRelativeTime, getProxyImageUrl } from '@/lib/utils';
 import { Clock, ExternalLink, ChevronRight, Newspaper, TrendingUp } from 'lucide-react';
 import type { NewsArticle } from '@/lib/services/unified-news-service';
 import { getFallbackImage } from '@/lib/image-fallbacks';
@@ -98,7 +98,7 @@ export function LatestNewsSection({ articles, showViewAll = true }: LatestNewsSe
 // ─── Hero Card: Big image with overlay text ─────────────────────────
 function NewsHeroCard({ article }: { article: NewsArticle }) {
   const fallback = getFallbackImage(article.category, article.title);
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
+  const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
@@ -167,7 +167,7 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
 // ─── Medium Card: Image left + text right (horizontal) ──────────────
 function NewsMediumCard({ article }: { article: NewsArticle }) {
   const fallback = getFallbackImage(article.category, article.title);
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
+  const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
@@ -222,7 +222,7 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
 // ─── Standard Card: Vertical image + text (for 3-column row) ────────
 function NewsStandardCard({ article }: { article: NewsArticle }) {
   const fallback = getFallbackImage(article.category, article.title);
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
+  const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
@@ -314,7 +314,7 @@ export function ExternalNewsCard({ article, compact = false }: ExternalNewsCardP
 // Horizontal variant for sidebar
 export function ExternalNewsCardHorizontal({ article }: { article: NewsArticle }) {
   const fallback = getFallbackImage(article.category, article.title);
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
+  const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {

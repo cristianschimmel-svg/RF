@@ -6,32 +6,32 @@ import { Button } from '@/components/ui/button';
 import { MiniBannerRow, AfipBadge } from '@/components/ads';
 import { GlobalTicker } from '@/components/layout/global-ticker';
 import { WeatherDateTime } from '@/components/layout/weather-datetime';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Newspaper, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getThemePref, setThemePref } from '@/lib/cookies';
 
 export function Header() {
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Initialize dark mode - DEFAULT to dark mode
+  // Initialize dark mode from cookies
   useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode');
+    const savedMode = getThemePref();
     if (savedMode !== null) {
-      const isDark = savedMode === 'true';
+      const isDark = savedMode === 'dark';
       setIsDarkMode(isDark);
       document.documentElement.classList.toggle('dark', isDark);
     } else {
       // Default to dark mode
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
-      localStorage.setItem('darkMode', 'true');
+      setThemePref('dark');
     }
   }, []);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    document.documentElement.classList.toggle('dark', newMode);
-    localStorage.setItem('darkMode', String(newMode));
+    setThemePref(newMode ? 'dark' : 'light');
   };
 
   return (
@@ -209,6 +209,18 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {/* Ticker Global */}
         <div className="bg-slate-900 border-b border-slate-700">
           <GlobalTicker />
+        </div>
+        {/* Acortacaminos Rápidos */}
+        <div className="bg-surface border-b border-border shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-1.5 flex gap-4 text-xs font-semibold uppercase tracking-wider">
+            <Link href="/noticias" className="text-text-secondary hover:text-accent dark:hover:text-amber-400 flex items-center gap-1.5 transition-colors">
+              <Newspaper className="w-3.5 h-3.5" /> Noticias
+            </Link>
+            <div className="w-[1px] h-4 bg-border"></div>
+            <Link href="/indicadores" className="text-text-secondary hover:text-accent dark:hover:text-amber-400 flex items-center gap-1.5 transition-colors">
+              <Activity className="w-3.5 h-3.5" /> Indicadores
+            </Link>
+          </div>
         </div>
       </div>
       <main className="flex-1">{children}</main>

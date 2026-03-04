@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { cn, formatNumber, formatPercent } from '@/lib/utils';
+import { trendStyles } from '@/lib/design-tokens';
 import { MiniSparkline } from './sparkline';
 import type { TickerItem as TickerItemType, Trend } from '@/types';
 import { Pause, Play } from 'lucide-react';
@@ -21,6 +22,9 @@ export function Ticker({
 }: TickerProps) {
   const [isPaused, setIsPaused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Don't render if no items
+  if (!items || items.length === 0) return null;
 
   // Double items for seamless loop
   const doubledItems = [...items, ...items];
@@ -76,23 +80,27 @@ interface TickerItemProps {
 }
 
 function TickerItem({ item }: TickerItemProps) {
-  const trendColors = {
-    up: 'text-emerald-400',
-    down: 'text-rose-400',
-    neutral: 'text-slate-400',
-  };
+  const trend = item.trend || 'neutral';
+  const tStyles = trendStyles[trend];
 
   return (
-    <div className="flex items-center gap-2 px-4 border-r border-slate-700 last:border-r-0">
-      <span className="text-xs text-slate-400 font-medium">{item.label}</span>
-      <span className="text-sm font-semibold text-data text-white">
-        {item.value}
-      </span>
-      {item.change && (
-        <span className={cn('text-xs font-medium text-data', trendColors[item.trend])}>
-          {item.change}
+    <div className="flex items-center gap-2 px-4 border-r border-slate-700 last:border-r-0 h-full">
+      <div className={cn(
+        "flex items-center gap-1.5 px-2 py-0.5 rounded transition-colors",
+        tStyles.bg,
+        tStyles.border,
+        "border border-transparent"
+      )}>
+        <span className="text-xs text-slate-400 font-medium">{item.label}</span>
+        <span className={cn("text-sm font-semibold text-data", tStyles.text)}>
+          {item.value}
         </span>
-      )}
+        {item.change && (
+          <span className={cn('text-xs font-medium text-data', tStyles.text)}>
+            {item.change}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -105,6 +113,7 @@ export function TickerStatic({
   items: TickerItemType[];
   className?: string;
 }) {
+  if (!items || items.length === 0) return null;
   return (
     <div
       className={cn(
@@ -134,6 +143,9 @@ export function EnhancedTicker({
   className?: string;
 }) {
   const [isPaused, setIsPaused] = useState(false);
+
+  if (!items || items.length === 0) return null;
+
   const doubledItems = [...items, ...items];
 
   return (
@@ -167,26 +179,33 @@ export function EnhancedTicker({
 }
 
 function EnhancedTickerItemComponent({ item }: { item: EnhancedTickerItem }) {
-  const trendColors = {
-    up: 'text-emerald-400',
-    down: 'text-rose-400',
-    neutral: 'text-slate-400',
-  };
+  const trend = item.trend || 'neutral';
+  // Note: we're using a dark background ticker, so we need strong colors
+  // which might be slightly different than default trendStyles if we want pure neon,
+  // but we can just use our defined trendStyles.
+  const tStyles = trendStyles[trend];
 
   return (
-    <div className="flex items-center gap-1.5 px-3 border-r border-slate-700">
-      <span className="text-[11px] text-slate-400 font-medium">{item.label}</span>
-      {item.sparklineData && item.sparklineData.length > 1 && (
-        <MiniSparkline data={item.sparklineData} trend={item.trend} />
-      )}
-      <span className="text-xs font-semibold text-data text-white">
-        {item.value}
-      </span>
-      {item.change && (
-        <span className={cn('text-[11px] font-medium text-data', trendColors[item.trend])}>
-          {item.change}
+    <div className="flex items-center gap-1.5 px-3 border-r border-slate-700 h-full">
+      <div className={cn(
+        "flex items-center gap-1.5 px-2 py-0.5 rounded transistion-colors",
+        tStyles.bg,
+        tStyles.border,
+        "border border-transparent"
+      )}>
+        <span className="text-[11px] text-slate-400 font-medium">{item.label}</span>
+        {item.sparklineData && item.sparklineData.length > 1 && (
+          <MiniSparkline data={item.sparklineData} trend={item.trend} />
+        )}
+        <span className={cn("text-xs font-semibold text-data", tStyles.text)}>
+          {item.value}
         </span>
-      )}
+        {item.change && (
+          <span className={cn('text-[11px] font-medium text-data', tStyles.text)}>
+            {item.change}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

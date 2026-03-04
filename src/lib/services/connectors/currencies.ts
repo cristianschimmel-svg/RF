@@ -72,24 +72,8 @@ export async function fetchCurrencyQuotes(): Promise<CurrencyFetchResult> {
         };
       });
 
-    // Try to get GBP from a separate source if not in cotizaciones
-    const hasGBP = currencies.some(c => c.code === 'GBP');
-    if (!hasGBP) {
-      // Approximate GBP from EUR using typical EUR/GBP ratio (~1.15)
-      const eur = currencies.find(c => c.code === 'EUR');
-      if (eur) {
-        currencies.push({
-          code: 'GBP',
-          name: 'Libra Esterlina',
-          buy: Math.round(eur.buy * 1.15 * 100) / 100,
-          sell: Math.round(eur.sell * 1.15 * 100) / 100,
-          changePercent: 0,
-          lastUpdated: eur.lastUpdated,
-          source: 'ambito' as IndicatorSource,
-          flag: '🇬🇧',
-        });
-      }
-    }
+    // Only show GBP if the API actually returns it — never approximate
+    // DolarAPI may not include GBP; in that case we simply omit it
 
     const result: CurrencyFetchResult = {
       currencies,
@@ -108,66 +92,13 @@ export async function fetchCurrencyQuotes(): Promise<CurrencyFetchResult> {
   }
 }
 
-// Fallback data when API fails
+// Empty result when API fails — never return invented data
 function getFallbackCurrencyData(): CurrencyFetchResult {
-  const now = new Date().toISOString();
-  
   return {
-    currencies: [
-      {
-        code: 'EUR',
-        name: 'Euro',
-        buy: 1619.40,
-        sell: 1633.41,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-        flag: '🇪🇺',
-      },
-      {
-        code: 'BRL',
-        name: 'Real Brasileño',
-        buy: 264.64,
-        sell: 264.79,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-        flag: '🇧🇷',
-      },
-      {
-        code: 'UYU',
-        name: 'Peso Uruguayo',
-        buy: 36.71,
-        sell: 36.71,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-        flag: '🇺🇾',
-      },
-      {
-        code: 'CLP',
-        name: 'Peso Chileno',
-        buy: 1.55,
-        sell: 1.55,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-        flag: '🇨🇱',
-      },
-      {
-        code: 'GBP',
-        name: 'Libra Esterlina',
-        buy: 1856.41,
-        sell: 1872.65,
-        changePercent: 0,
-        lastUpdated: now,
-        source: 'fallback',
-        flag: '🇬🇧',
-      },
-    ],
+    currencies: [],
     source: 'fallback',
-    lastUpdated: now,
+    lastUpdated: new Date().toISOString(),
     isFallback: true,
-    disclaimer: 'Datos de respaldo. No se pudieron obtener cotizaciones en tiempo real.',
+    disclaimer: 'Sin datos disponibles. No se pudo conectar con la API de cotizaciones.',
   };
 }

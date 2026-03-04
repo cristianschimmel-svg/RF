@@ -150,8 +150,7 @@ export async function generateImagePrompt(title: string, category: string): Prom
 }
 
 /**
- * Generate an AI image using Gemini's image generation (Imagen)
- * Note: This requires specific API access. Falls back to placeholder.
+ * Generate an AI image using Gemini's image generation (Imagen 3)
  */
 export async function generateNewsImage(
   title: string,
@@ -164,14 +163,56 @@ export async function generateNewsImage(
     return cached;
   }
 
-  // For now, return category-specific Unsplash images
-  // TODO: Integrate with Google Imagen or another image generation API when available
   const { getFallbackImage } = await import('@/lib/image-fallbacks');
-  const imageUrl = getFallbackImage(category, title);
-  
-  cache.set(cacheKey, imageUrl, AI_CACHE_TTL);
-  
-  return imageUrl;
+  const fallbackUrl = getFallbackImage(category, title);
+
+  if (!GOOGLE_AI_API_KEY) {
+    return fallbackUrl;
+  }
+
+  try {
+    const prompt = await generateImagePrompt(title, category);
+    // Request a simple, lower resolution generation
+    const fullPrompt = `${prompt} --no-text`;
+
+    const response = await fetch(
+      `${GEMINI_API_URL}/imagen-3.0-generate-001:predict?key=${GOOGLE_AI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          instances: [{ prompt: fullPrompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: "16:9"
+          }
+        }),
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const base64Image = data?.predictions?.[0]?.bytesBase64Encoded;
+      
+      if (base64Image) {
+        const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+        
+        // Cache the base64 string
+        cache.set(cacheKey, imageUrl, AI_CACHE_TTL);
+        return imageUrl;
+      }
+    } else {
+      console.error('[AI] Imagen API error:', await response.text());
+    }
+  } catch (error) {
+    console.error('[AI] Error generating image:', error);
+  }
+
+  // Fallback to Unsplash
+  cache.set(cacheKey, fallbackUrl, AI_CACHE_TTL);
+  return fallbackUrl;
 }
 
 /**

@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatRelativeTime, getProxyImageUrl } from '@/lib/utils';
+import { getFallbackImage } from '@/lib/image-fallbacks';
 import { Pen, Clock, ChevronRight, Star } from 'lucide-react';
 import type { NewsArticle } from '@/lib/services/unified-news-service';
 
@@ -63,6 +65,10 @@ export function EditorialSection({ articles, showViewAll = true }: EditorialSect
 }
 
 function EditorialFeaturedCard({ article }: { article: NewsArticle }) {
+  const fallback = getFallbackImage(article.category, article.title);
+  const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Link href={`/noticias/${article.slug}`} className="group block lg:col-span-2">
       <Card className="overflow-hidden h-full border-2 border-amber-400/30 hover:border-amber-400/60 transition-all hover:shadow-xl bg-gradient-to-br from-amber-50/50 to-transparent dark:from-amber-900/10">
@@ -70,12 +76,19 @@ function EditorialFeaturedCard({ article }: { article: NewsArticle }) {
           {/* Image */}
           <div className="relative aspect-video md:aspect-auto min-h-[200px] overflow-hidden">
             <Image
-              src={article.imageUrl}
+              src={imgSrc}
               alt={article.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
+              unoptimized={imgError}
+              onError={() => {
+                if (!imgError) {
+                  setImgError(true);
+                  setImgSrc(fallback);
+                }
+              }}
             />
             <div className="absolute top-3 left-3">
               <Badge 
@@ -123,17 +136,28 @@ function EditorialFeaturedCard({ article }: { article: NewsArticle }) {
 }
 
 function EditorialMiniCard({ article }: { article: NewsArticle }) {
+  const fallback = getFallbackImage(article.category, article.title);
+  const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Link href={`/noticias/${article.slug}`} className="group block">
       <Card className="p-3 border-l-4 border-l-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors">
         <div className="flex gap-3">
           <div className="relative w-20 h-16 rounded overflow-hidden flex-shrink-0">
             <Image
-              src={article.imageUrl}
+              src={imgSrc}
               alt={article.title}
               fill
               className="object-cover"
               sizes="80px"
+              unoptimized={imgError}
+              onError={() => {
+                if (!imgError) {
+                  setImgError(true);
+                  setImgSrc(fallback);
+                }
+              }}
             />
           </div>
           <div className="min-w-0 flex-1">

@@ -73,50 +73,17 @@ const API_CONFIG = {
   cacheTTL: 60 * 2, // 2 minutes cache
 };
 
-// Fallback static data for when APIs are unavailable
+// Empty fallback data — never return invented market data
 const FALLBACK_DATA: MarketSummary = {
-  indices: [
-    {
-      symbol: 'MERVAL',
-      name: 'S&P MERVAL',
-      value: 2918925.84,
-      change: -31185.45,
-      changePercent: -1.06,
-      high: 2972907.88,
-      low: 2879921.72,
-      previousClose: 2950111.29,
-      timestamp: new Date(),
-    },
-    {
-      symbol: 'GENERAL',
-      name: 'S&P BYMA Índice General',
-      value: 106744.77,
-      change: -1106.70,
-      changePercent: -0.92,
-      high: 108200.00,
-      low: 105800.00,
-      previousClose: 107851.47,
-      timestamp: new Date(),
-    },
-  ],
-  topGainers: [
-    { symbol: 'GGAL', name: 'Grupo Galicia', price: 6520, change: 120, changePercent: 1.87, volume: 12500000, high: 6580, low: 6400, open: 6400, previousClose: 6400, timestamp: new Date() },
-    { symbol: 'YPFD', name: 'YPF S.A.', price: 50800, change: 1800, changePercent: 3.67, volume: 8900000, high: 51200, low: 49000, open: 49000, previousClose: 49000, timestamp: new Date() },
-    { symbol: 'BBAR', name: 'BBVA Argentina', price: 6855, change: 255, changePercent: 3.86, volume: 6700000, high: 6900, low: 6600, open: 6600, previousClose: 6600, timestamp: new Date() },
-  ],
-  topLosers: [
-    { symbol: 'TXAR', name: 'Ternium Argentina', price: 598, change: -22, changePercent: -3.55, volume: 3200000, high: 625, low: 595, open: 620, previousClose: 620, timestamp: new Date() },
-    { symbol: 'ALUA', name: 'Aluar', price: 725, change: -25, changePercent: -3.33, volume: 4100000, high: 755, low: 720, open: 750, previousClose: 750, timestamp: new Date() },
-    { symbol: 'TECO2', name: 'Telecom Argentina', price: 3365, change: -135, changePercent: -3.86, volume: 5500000, high: 3520, low: 3350, open: 3500, previousClose: 3500, timestamp: new Date() },
-  ],
-  mostActive: [
-    { symbol: 'GGAL', name: 'Grupo Galicia', price: 6520, change: 120, changePercent: 1.87, volume: 12500000, high: 6580, low: 6400, open: 6400, previousClose: 6400, timestamp: new Date() },
-    { symbol: 'YPFD', name: 'YPF S.A.', price: 50800, change: 1800, changePercent: 3.67, volume: 8900000, high: 51200, low: 49000, open: 49000, previousClose: 49000, timestamp: new Date() },
-    { symbol: 'BBAR', name: 'BBVA Argentina', price: 6855, change: 255, changePercent: 3.86, volume: 6700000, high: 6900, low: 6600, open: 6600, previousClose: 6600, timestamp: new Date() },
-  ],
-  totalVolume: 50884858017.31,
+  indices: [],
+  topGainers: [],
+  topLosers: [],
+  mostActive: [],
+  totalVolume: 0,
   marketStatus: 'closed',
   lastUpdate: new Date(),
+  isFallback: true,
+  disclaimer: 'Sin datos disponibles. No se pudo conectar con el mercado.',
 };
 
 /**
@@ -217,26 +184,9 @@ async function fetchMarketIndices(): Promise<MarketIndex[]> {
     const merval = await fetchMervalFromYahoo();
     
     if (merval) {
-      // Generate GENERAL index based on MERVAL (approximate ratio)
-      // GENERAL/MERVAL ≈ 0.041 (e.g., GENERAL ~106K when MERVAL ~2.6M)
-      const generalRatio = 0.041;
-      const generalValue = merval.value * generalRatio;
-      const generalChange = merval.change * generalRatio;
-      
-      return [
-        merval,
-        {
-          symbol: 'GENERAL',
-          name: 'S&P BYMA Índice General',
-          value: generalValue,
-          change: generalChange,
-          changePercent: merval.changePercent,
-          high: generalValue * 1.015,
-          low: generalValue * 0.985,
-          previousClose: generalValue - generalChange,
-          timestamp: new Date(),
-        },
-      ];
+      // Only return MERVAL — GENERAL index requires a separate real data source
+      // Never approximate GENERAL from MERVAL with an invented ratio
+      return [merval];
     }
 
     return FALLBACK_DATA.indices;
@@ -321,15 +271,15 @@ async function fetchLeaderStocksData(): Promise<StockQuote[]> {
     if (stocks.length >= 3) {
       return stocks;
     }
+    
+    // Return whatever real stocks we got (even if fewer than 3)
+    return stocks;
   } catch (error) {
     console.error('Error fetching leader stocks:', error);
   }
 
-  // Fallback to static data
-  return [
-    ...FALLBACK_DATA.topGainers,
-    ...FALLBACK_DATA.topLosers,
-  ];
+  // No fallback to invented data — return empty
+  return [];
 }
 
 /**
@@ -350,8 +300,7 @@ export async function getMarketSummary(): Promise<MarketSummary> {
     ]);
     
     // Check if we got real data from Yahoo
-    const isRealData = indices.length > 0 && indices[0].symbol === 'MERVAL' && 
-                       indices[0].value !== FALLBACK_DATA.indices[0].value;
+    const isRealData = indices.length > 0 && leaders.length > 0;
 
     // Sort for gainers/losers
     const sortedByChange = [...leaders].sort((a, b) => b.changePercent - a.changePercent);
@@ -492,60 +441,8 @@ export async function getIndexHistorical(
     }
   }
 
-  // Fallback: Generate realistic mock historical data based on current price
-  const currentIndex = await getIndexData(symbol as 'MERVAL' | 'GENERAL');
-  const basePrice = currentIndex?.value || 2900000;
-  
-  const periodDays: Record<string, number> = {
-    '1D': 1,
-    '1W': 7,
-    '1M': 30,
-    '3M': 90,
-    '1Y': 365,
-    'YTD': Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / 86400000),
-  };
-
-  const days = periodDays[period] || 30;
-  const data: HistoricalData[] = [];
-  
-  // Generate data points
-  let price = basePrice * (1 - (Math.random() * 0.1)); // Start 0-10% lower
-  const volatility = period === '1D' ? 0.005 : 0.02;
-  const pointsPerDay = period === '1D' ? 48 : 1; // Every 30min for 1D, daily otherwise
-  
-  for (let i = days * pointsPerDay; i >= 0; i--) {
-    const date = new Date();
-    if (period === '1D') {
-      date.setMinutes(date.getMinutes() - i * 30);
-    } else {
-      date.setDate(date.getDate() - i);
-    }
-    
-    // Random walk with slight upward bias
-    const change = (Math.random() - 0.48) * volatility * price;
-    price = Math.max(price + change, price * 0.9);
-    
-    const dayVolatility = price * volatility * 0.5;
-    
-    data.push({
-      date,
-      open: price - dayVolatility * Math.random(),
-      high: price + dayVolatility * Math.random(),
-      low: price - dayVolatility * Math.random(),
-      close: price,
-      volume: Math.floor(Math.random() * 100000000) + 50000000,
-    });
-  }
-
-  // Ensure last point matches current price
-  if (data.length > 0 && currentIndex) {
-    data[data.length - 1].close = currentIndex.value;
-    data[data.length - 1].high = currentIndex.high || currentIndex.value;
-    data[data.length - 1].low = currentIndex.low || currentIndex.value;
-  }
-
-  cache.set(cacheKey, data, period === '1D' ? 60 : 60 * 60);
-  return data;
+  // No fallback — never generate mock historical data
+  return [];
 }
 
 /**

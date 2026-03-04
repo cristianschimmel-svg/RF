@@ -20,6 +20,7 @@ import {
   ChevronDown,
   User,
   ExternalLink,
+  Newspaper,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -58,6 +59,11 @@ const navigation = [
     name: 'Indicadores',
     href: '/admin/indicadores',
     icon: BarChart3,
+  },
+  {
+    name: 'Noticias Externas',
+    href: '/admin/noticias-externas',
+    icon: Newspaper,
   },
 ];
 

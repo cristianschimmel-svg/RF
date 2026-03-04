@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { formatRelativeTime, formatDate } from '@/lib/utils';
+import { formatRelativeTime, formatDate, getProxyImageUrl } from '@/lib/utils';
 import { Clock, User, ChevronRight } from 'lucide-react';
 
 interface NewsCardProps {
@@ -35,7 +35,7 @@ export function NewsCard({
         <div className="relative aspect-video bg-surface-secondary overflow-hidden">
           {imageUrl ? (
             <Image
-              src={imageUrl}
+              src={getProxyImageUrl(imageUrl)}
               alt={title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -96,7 +96,7 @@ export function NewsFeatured({
           <div className="relative aspect-video md:aspect-[4/3] bg-surface-secondary overflow-hidden">
             {imageUrl ? (
               <Image
-                src={imageUrl}
+                src={getProxyImageUrl(imageUrl)}
                 alt={title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -189,7 +189,7 @@ export function NewsCardHorizontal({
           <div className="relative w-32 md:w-48 flex-shrink-0 bg-surface-secondary">
             {imageUrl ? (
               <Image
-                src={imageUrl}
+                src={getProxyImageUrl(imageUrl)}
                 alt={title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"

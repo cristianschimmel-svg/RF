@@ -124,21 +124,24 @@ function decodeHtmlEntities(text: string): string {
  * Extract og:image or main article image from HTML
  */
 function extractOgImage(html: string): string | undefined {
-  // Try og:image first (most reliable)
+  // Try og:image:secure_url first
+  const secureMatch = html.match(/<meta[^>]*property="og:image:secure_url"[^>]*content="([^"]+)"[^>]*>/i)
+    || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image:secure_url"[^>]*>/i);
+  if (secureMatch?.[1]) return decodeHtmlEntities(secureMatch[1]);
+
+  // Try og:image (most reliable)
   const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"[^>]*>/i)
     || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image"[^>]*>/i);
-  
-  if (ogImageMatch?.[1]) {
-    return decodeHtmlEntities(ogImageMatch[1]);
-  }
+  if (ogImageMatch?.[1]) return decodeHtmlEntities(ogImageMatch[1]);
 
   // Try twitter:image
   const twitterMatch = html.match(/<meta[^>]*name="twitter:image"[^>]*content="([^"]+)"[^>]*>/i)
     || html.match(/<meta[^>]*content="([^"]+)"[^>]*name="twitter:image"[^>]*>/i);
-  
-  if (twitterMatch?.[1]) {
-    return decodeHtmlEntities(twitterMatch[1]);
-  }
+  if (twitterMatch?.[1]) return decodeHtmlEntities(twitterMatch[1]);
+
+  // Special case for data-src or lazy loaded images (common in Ambito)
+  const dataSrcMatch = html.match(/<img[^>]*data-src="(https?:\/\/[^"]+(?:\.jpg|\.jpeg|\.png|\.webp)[^"]*)"[^>]*>/i);
+  if (dataSrcMatch?.[1]) return decodeHtmlEntities(dataSrcMatch[1]);
 
   // Try first large image in article
   const imgMatch = html.match(/<img[^>]*src="(https?:\/\/[^"]+(?:\.jpg|\.jpeg|\.png|\.webp)[^"]*)"[^>]*>/i);

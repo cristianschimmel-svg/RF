@@ -11,10 +11,10 @@ import {
 } from 'lucide-react';
 
 const indicadorLinks = [
+  { href: '/indicadores', label: 'General', icon: LayoutDashboard },
   { href: '/indicadores/dolar', label: 'Dólar', icon: DollarSign },
-  { href: '/indicadores/inflacion', label: 'Inflación', icon: Percent },
-  { href: '/indicadores/tasas', label: 'Tasas', icon: Activity },
-    { href: '/indicadores/mercados', label: 'Acciones', icon: BarChart3 },
+  { href: '/indicadores/inflacion', label: 'Inflación, Riesgo & Tasas', icon: Percent },
+  { href: '/indicadores/mercados', label: 'Acciones', icon: BarChart3 },
   { href: '/indicadores/agro', label: 'Agro', icon: Wheat },
   { href: '/indicadores/cripto', label: 'Cripto', icon: Bitcoin },
 ];

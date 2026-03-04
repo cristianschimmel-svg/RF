@@ -1,6 +1,7 @@
 'use client';
 
 import { cn, formatNumber, formatPercent } from '@/lib/utils';
+import { trendStyles } from '@/lib/design-tokens';
 import { Card } from '@/components/ui/card';
 import { Badge, VariationBadge } from '@/components/ui/badge';
 import { Sparkline } from './sparkline';
@@ -23,7 +24,7 @@ export function IndicatorCard({
   showSparkline = true,
   showSource = true,
   className,
-  colorize = false,
+  colorize = true,
 }: IndicatorCardProps) {
   const trend: Trend =
     indicator.changePercent > 0
@@ -32,12 +33,7 @@ export function IndicatorCard({
       ? 'down'
       : 'neutral';
 
-  // Color classes based on trend
-  const trendBgColors = {
-    up: 'bg-emerald-50 border-emerald-200',
-    down: 'bg-rose-50 border-rose-200',
-    neutral: 'bg-surface border-border-muted',
-  };
+  const tStyles = trendStyles[trend];
 
   const trendTextColors = {
     up: 'text-emerald-700',
@@ -92,9 +88,9 @@ export function IndicatorCard({
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden',
+        'group relative overflow-hidden transition-colors',
         s.card,
-        colorize ? trendBgColors[trend] : '',
+        colorize ? `${tStyles.bg} ${tStyles.border} border` : '',
         className
       )}
       hoverable
@@ -129,7 +125,12 @@ export function IndicatorCard({
       </div>
 
       {/* Main Value */}
-      <div className={cn('text-text-primary text-data', s.value, indicator.noData && 'text-sm text-text-muted')}>
+      <div className={cn(
+        'text-data',
+        colorize && !indicator.noData ? tStyles.text : 'text-text-primary',
+        s.value,
+        indicator.noData && 'text-sm text-text-muted'
+      )}>
         {indicator.noData ? 'No disp.' : formatValue(indicator.value)}
       </div>
 
@@ -178,18 +179,14 @@ export function IndicatorCardCompact({
       ? 'down'
       : 'neutral';
 
-  const trendColors = {
-    up: 'text-positive',
-    down: 'text-negative',
-    neutral: 'text-text-secondary',
-  };
+  const tStyles = trendStyles[trend];
 
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-3 p-3 rounded-lg',
-        'bg-surface border border-border-muted',
-        'hover:bg-interactive-hover transition-colors cursor-pointer',
+        'flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
+        tStyles.bg,
+        tStyles.border,
         className
       )}
     >
@@ -197,11 +194,11 @@ export function IndicatorCardCompact({
         <div className="text-xs text-text-muted truncate">
           {indicator.shortName || indicator.name}
         </div>
-        <div className="text-sm font-semibold text-data text-text-primary">
+        <div className={cn("text-sm font-semibold text-data", tStyles.text)}>
           {formatNumber(indicator.value, { decimals: indicator.decimals })}
         </div>
       </div>
-      <div className={cn('text-sm font-medium text-data', trendColors[trend])}>
+      <div className={cn('text-sm font-medium text-data', tStyles.text)}>
         {formatPercent(indicator.changePercent)}
       </div>
     </div>

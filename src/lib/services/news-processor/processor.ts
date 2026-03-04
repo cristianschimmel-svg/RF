@@ -14,6 +14,7 @@
 import { scraperManager } from '../scrapers';
 import { scrapeArticleContent } from './content-scraper';
 import { generateAISummary, isAIAvailable, checkArticleRelevanceWithAI } from './ai-summarizer';
+import { generateNewsImage } from '../ai/gemini-service';
 import { 
   upsertArticles, 
   getProcessedArticles, 
@@ -413,6 +414,27 @@ async function processArticle(article: ScrapedArticle): Promise<ProcessedNews> {
     // Use scraped og:image if RSS didn't have one
     if (scrapedImageUrl && (!processed.sourceImageUrl || processed.sourceImageUrl.includes('unsplash'))) {
       processed.sourceImageUrl = scrapedImageUrl;
+    }
+
+    // Step 1.5: Validate image URL and fallback to Gemini Imagen 3 if needed
+    let isImageValid = false;
+    if (processed.sourceImageUrl && !processed.sourceImageUrl.includes('unsplash')) {
+      try {
+        const imgRes = await fetch(processed.sourceImageUrl, { method: 'HEAD', headers: { 'User-Agent': 'Mozilla/5.0' }, next: { revalidate: 3600 } });
+        if (imgRes.ok && imgRes.headers.get('content-type')?.startsWith('image/')) {
+          isImageValid = true;
+        }
+      } catch (e) {
+        console.log(`[NewsProcessor] ⚠️ Image validation failed for ${processed.sourceImageUrl}`);
+      }
+    }
+
+    if (!isImageValid) {
+      console.log(`[NewsProcessor] 📸 Generating AI Image fallback for: ${processed.title}`);
+      const aiImage = await generateNewsImage(processed.title, article.category);
+      if (aiImage) {
+        processed.sourceImageUrl = aiImage;
+      }
     }
 
     // Step 2: Generate AI summary (only if we have content or a good excerpt)

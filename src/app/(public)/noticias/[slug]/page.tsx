@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ArticleHeroImage } from '@/components/news/article-hero-image';
+import { TrackRecentArticle } from '@/components/news/track-recent-article';
 import { getNewsArticle, getExternalNews } from '@/lib/services/unified-news-service';
-import { formatDate, formatRelativeTime, markdownToHtml } from '@/lib/utils';
+import { formatDate, formatRelativeTime, markdownToHtml, getProxyImageUrl } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -102,6 +104,11 @@ export default async function ArticlePage({ params }: PageProps) {
 
   return (
     <MainLayout>
+      <TrackRecentArticle 
+        slug={slug}
+        title={article.title}
+        imageUrl={article.imageUrl}
+      />
       <article className="max-w-7xl mx-auto px-4 py-6">
         {/* Back Link */}
         <Link
@@ -175,23 +182,12 @@ export default async function ArticlePage({ params }: PageProps) {
             </header>
 
             {/* Featured Image */}
-            <div className="relative aspect-video rounded-xl overflow-hidden mb-8 shadow-lg">
-              <Image
-                src={article.imageUrl || article.aiImageUrl || '/banners/Rosario Finanzas Logo_nuevo.png'}
-                alt={article.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1024px) 100vw, 66vw"
-              />
-              {article.isExternal && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <p className="text-xs text-white/80">
-                    Imagen ilustrativa
-                  </p>
-                </div>
-              )}
-            </div>
+            <ArticleHeroImage
+              initialUrl={article.imageUrl || article.aiImageUrl || '/banners/Rosario Finanzas Logo_nuevo.png'}
+              title={article.title}
+              category={article.category}
+              isExternal={article.isExternal}
+            />
 
             {/* AI Summary Section (for external articles) */}
             {article.isExternal && article.aiSummary && (
@@ -344,7 +340,7 @@ export default async function ArticlePage({ params }: PageProps) {
                       >
                         <div className="relative w-16 h-12 rounded overflow-hidden flex-shrink-0">
                           <Image
-                            src={news.imageUrl}
+                            src={getProxyImageUrl(news.imageUrl)}
                             alt={news.title}
                             fill
                             className="object-cover"

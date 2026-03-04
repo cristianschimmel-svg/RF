@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge, VariationBadge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn, formatNumber } from '@/lib/utils';
+import { trendStyles } from '@/lib/design-tokens';
 import {
   TrendingUp,
   TrendingDown,
@@ -120,9 +121,13 @@ const MarketStatusBadge = ({ status }: { status: string }) => {
 const StockRow = ({ stock }: { stock: StockQuote }) => {
   const trend = stock.changePercent > 0 ? 'up' : stock.changePercent < 0 ? 'down' : 'neutral';
   const TrendIcon = trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : Minus;
+  const tStyles = trendStyles[trend];
   
   return (
-    <div className="flex items-center justify-between py-2 border-b border-border/50 dark:border-slate-800/50 last:border-0">
+    <div className={cn(
+      "flex items-center justify-between py-2 px-2 -mx-2 rounded transition-colors border-b border-border/50 dark:border-slate-800/50 last:border-0",
+      "hover:bg-slate-50 dark:hover:bg-slate-800/50"
+    )}>
       <div className="flex items-center gap-2">
         <span className="font-mono text-sm font-semibold text-text-primary dark:text-white">
           {stock.symbol}
@@ -132,14 +137,13 @@ const StockRow = ({ stock }: { stock: StockQuote }) => {
         </span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="font-mono text-sm text-text-primary dark:text-white">
+        <span className={cn("font-mono text-sm", tStyles.text)}>
           ${formatNumber(stock.price, { decimals: 2 })}
         </span>
         <div className={cn(
-          'flex items-center gap-0.5 text-xs font-medium',
-          trend === 'up' ? 'text-emerald-600 dark:text-emerald-400' :
-          trend === 'down' ? 'text-rose-600 dark:text-rose-400' :
-          'text-slate-500 dark:text-slate-400'
+          'flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded',
+          tStyles.bg,
+          tStyles.text
         )}>
           <TrendIcon className="w-3 h-3" />
           {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%

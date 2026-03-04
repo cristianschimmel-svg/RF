@@ -294,3 +294,29 @@ export function markdownToHtml(md: string): string {
 
   return html;
 }
+
+/**
+ * Wraps an external image URL in the proxy to bypass CORS and Hotlink protection
+ */
+export function getProxyImageUrl(url: string | undefined | null): string {
+  if (!url) return '';
+  
+  // If it's already a proxy URL or a local path, return as is
+  if (url.startsWith('/') || url.startsWith('/api/image-proxy')) {
+    return url;
+  }
+
+  // Allowed domains that don't need proxying
+  if (url.includes('rosariofinanzas.com.ar') || url.includes('unsplash.com')) {
+    return url;
+  }
+
+  // Only proxy external URLs
+  if (url.startsWith('http')) {
+    // Optionally encode the URL if it's not already proxied
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  }
+
+  return url;
+}
+

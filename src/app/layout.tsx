@@ -56,15 +56,22 @@ export const metadata: Metadata = {
   },
 };
 
+import { cookies } from 'next/headers';
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const themeCookie = cookieStore.get('rf_theme');
+  // Default to dark mode if no cookie is present, as per previous logic
+  const isDark = themeCookie ? themeCookie.value === 'dark' : true;
+
   return (
     <html
       lang="es-AR"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${isDark ? 'dark' : ''}`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-bg-primary font-sans antialiased">

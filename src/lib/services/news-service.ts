@@ -24,20 +24,6 @@ export interface NewsArticle {
 // Image fallback — delegated to shared utility (getFallbackImage → getImageForCategory)
 export { getImageForCategory };
 
-// Curated financial news topics for Argentina & Region (fallback/demo content)
-const NEWS_TOPICS = [
-  { title: 'El dólar blue marca una nueva jornada de volatilidad', category: 'Economía', keywords: ['dolar', 'blue', 'cotizacion'] },
-  { title: 'La soja recupera terreno en Chicago ante demanda asiática', category: 'Agro', keywords: ['soja', 'chicago', 'granos'] },
-  { title: 'El Merval extiende su rally alcista con récords históricos', category: 'Mercados', keywords: ['merval', 'acciones', 'bolsa'] },
-  { title: 'Bitcoin supera nuevos máximos mientras el mercado cripto se fortalece', category: 'Cripto', keywords: ['bitcoin', 'crypto', 'btc'] },
-  { title: 'El BCRA mantiene la tasa de política monetaria sin cambios', category: 'Economía', keywords: ['bcra', 'tasa', 'monetaria'] },
-  { title: 'Trigo y maíz muestran señales mixtas en el mercado local', category: 'Agro', keywords: ['trigo', 'maiz', 'cereales'] },
-  { title: 'Los bonos argentinos continúan en demanda con fuerte volumen', category: 'Mercados', keywords: ['bonos', 'argentina', 'riesgo pais'] },
-  { title: 'La inflación mensual muestra desaceleración según consultoras', category: 'Economía', keywords: ['inflacion', 'precios', 'ipc'] },
-  { title: 'Ethereum lidera las altcoins con ganancias semanales destacadas', category: 'Cripto', keywords: ['ethereum', 'altcoin', 'eth'] },
-  { title: 'El sector energético impulsa nuevas inversiones en Argentina', category: 'Mercados', keywords: ['energia', 'ypf', 'vaca muerta'] },
-];
-
 // Fetch articles from database
 async function fetchDBArticles(): Promise<NewsArticle[]> {
   try {
@@ -81,47 +67,16 @@ async function fetchDBArticles(): Promise<NewsArticle[]> {
   }
 }
 
-// Generate curated news articles (fallback/demo)
-function generateCuratedArticles(): NewsArticle[] {
-  const now = new Date();
-  
-  return NEWS_TOPICS.map((topic, index) => {
-    const hoursAgo = Math.floor(Math.random() * 48) + (index * 3);
-    const publishedAt = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
-    
-    return {
-      id: `curated-${index + 1}`,
-      title: topic.title,
-      excerpt: `Análisis detallado sobre ${topic.keywords.join(', ')} y su impacto en el mercado financiero argentino.`,
-      slug: topic.title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, ''),
-      category: topic.category,
-      imageUrl: getImageForCategory(topic.category, topic.title),
-      publishedAt,
-      source: 'Rosario Finanzas',
-      isFromDB: false,
-    };
-  });
-}
-
-// Get all news combining DB articles and curated content
+// Get all news from database only — never generate fake content
 export async function getAllNews(): Promise<NewsArticle[]> {
   const cacheKey = 'news:all';
   let articles = cache.get<NewsArticle[]>(cacheKey);
   
   if (!articles) {
-    const [dbArticles, curatedArticles] = await Promise.all([
-      fetchDBArticles(),
-      Promise.resolve(generateCuratedArticles()),
-    ]);
+    articles = await fetchDBArticles();
     
-    // Combine and sort by date, DB articles take priority
-    articles = [...dbArticles, ...curatedArticles]
-      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+    // Sort by date
+    articles.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
     
     cache.set(cacheKey, articles, 60); // Cache for 1 minute
   }

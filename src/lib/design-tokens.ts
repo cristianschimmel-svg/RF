@@ -98,6 +98,24 @@ export const colors = {
   },
 } as const;
 
+export const trendStyles = {
+  up: {
+    text: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-500/10',
+    border: 'border-emerald-500/20',
+  },
+  down: {
+    text: 'text-rose-600 dark:text-rose-400',
+    bg: 'bg-rose-500/10',
+    border: 'border-rose-500/20',
+  },
+  neutral: {
+    text: 'text-slate-500 dark:text-slate-400',
+    bg: 'bg-slate-500/5',
+    border: 'border-slate-500/10',
+  },
+} as const;
+
 // ============================================
 // SEMANTIC TOKENS
 // ============================================
