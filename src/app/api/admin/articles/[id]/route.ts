@@ -11,10 +11,10 @@ const articleSchema = z.object({
   excerpt: z.string().max(500).optional().nullable(),
   content: z.string().optional().nullable(),
   coverImage: z.string().optional().nullable().or(z.literal('')),
-  categoryId: z.string().uuid().optional().nullable().or(z.literal('')),
+  categoryId: z.string().min(1).optional().nullable().or(z.literal('')),
   status: z.enum(['DRAFT', 'PUBLISHED', 'SCHEDULED', 'ARCHIVED']),
   publishedAt: z.string().datetime().optional().nullable(),
-  tagIds: z.array(z.string().uuid()).optional(),
+  tagIds: z.array(z.string().min(1)).optional(),
   // SEO fields
   metaTitle: z.string().max(70).optional().nullable().or(z.literal('')),
   metaDescription: z.string().max(160).optional().nullable().or(z.literal('')),

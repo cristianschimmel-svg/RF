@@ -10,6 +10,7 @@ import { scraperManager } from './scrapers';
 import { generateNewsSummary, generateNewsImage, isAIAvailable } from './ai';
 import { getProcessedNews, isArticleRelevant, scrapeArticleContent, type ProcessedNews } from './news-processor';
 import type { ScrapedArticle } from './scrapers/types';
+import { getFallbackImage as getImageForCategory } from '@/lib/image-fallbacks';
 
 // ============================================
 // TYPES
@@ -44,47 +45,10 @@ export interface NewsWithAI extends NewsArticle {
 }
 
 // ============================================
-// CATEGORY IMAGES (fallback)
+// CATEGORY IMAGES (fallback) — delegated to shared utility
 // ============================================
 
-export const CATEGORY_IMAGES: Record<string, string[]> = {
-  'Economía': [
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1604594849809-dfedbc827105?w=600&h=400&fit=crop',
-  ],
-  'Agro': [
-    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop',
-  ],
-  'Mercados': [
-    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
-  ],
-  'Finanzas': [
-    'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop',
-  ],
-  'Cripto': [
-    'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=400&fit=crop',
-  ],
-  'default': [
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1604594849809-dfedbc827105?w=600&h=400&fit=crop',
-  ],
-};
-
-export function getImageForCategory(category: string, title: string = ''): string {
-  const images = CATEGORY_IMAGES[category] || CATEGORY_IMAGES['default'];
-  const index = Math.abs(title.length % images.length);
-  return images[index];
-}
+export { getImageForCategory };
 
 function generateSlug(title: string): string {
   return title

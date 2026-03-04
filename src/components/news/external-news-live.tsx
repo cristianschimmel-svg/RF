@@ -6,6 +6,7 @@ import { ExternalNewsCard } from './latest-news-section';
 import { Newspaper, RefreshCw, Clock } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import type { NewsArticle } from '@/lib/services/unified-news-service';
+import { getFallbackImage } from '@/lib/image-fallbacks';
 
 interface ExternalNewsResponse {
   success: boolean;
@@ -84,7 +85,7 @@ export function ExternalNewsLive({ initialArticles }: ExternalNewsLiveProps) {
     slug: a.id,
     excerpt: a.aiSummary || a.header,
     content: a.aiSummary,
-    imageUrl: a.sourceImageUrl || a.aiImageUrl || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
+    imageUrl: a.sourceImageUrl || a.aiImageUrl || getFallbackImage(a.category, a.title),
     category: a.category,
     source: a.sourceName,
     sourceUrl: a.sourceUrl,

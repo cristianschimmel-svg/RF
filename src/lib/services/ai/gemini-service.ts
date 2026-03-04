@@ -166,36 +166,8 @@ export async function generateNewsImage(
 
   // For now, return category-specific Unsplash images
   // TODO: Integrate with Google Imagen or another image generation API when available
-  const categoryImages: Record<string, string[]> = {
-    economia: [
-      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1604594849809-dfedbc827105?w=800&h=450&fit=crop',
-    ],
-    mercados: [
-      'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop',
-    ],
-    agro: [
-      'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&h=450&fit=crop',
-    ],
-    finanzas: [
-      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=450&fit=crop',
-    ],
-    cripto: [
-      'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&h=450&fit=crop',
-      'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=450&fit=crop',
-    ],
-  };
-
-  const images = categoryImages[category.toLowerCase()] || categoryImages.economia;
-  const imageUrl = images[Math.floor(Math.random() * images.length)];
+  const { getFallbackImage } = await import('@/lib/image-fallbacks');
+  const imageUrl = getFallbackImage(category, title);
   
   cache.set(cacheKey, imageUrl, AI_CACHE_TTL);
   

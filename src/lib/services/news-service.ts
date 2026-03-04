@@ -5,6 +5,7 @@
 
 import { cache } from './cache';
 import { prisma } from '@/lib/db/prisma';
+import { getFallbackImage as getImageForCategory } from '@/lib/image-fallbacks';
 
 export interface NewsArticle {
   id: string;
@@ -20,44 +21,8 @@ export interface NewsArticle {
   isFromDB?: boolean;
 }
 
-// Placeholder image URLs based on category (using Unsplash)
-export const CATEGORY_IMAGES: Record<string, string[]> = {
-  'Economía': [
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1604594849809-dfedbc827105?w=400&h=300&fit=crop',
-  ],
-  'Agro': [
-    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop',
-  ],
-  'Mercados': [
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=400&h=300&fit=crop',
-  ],
-  'Cripto': [
-    'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop',
-  ],
-  'Empresas': [
-    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-  ],
-  'Finanzas Personales': [
-    'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&h=300&fit=crop',
-  ],
-  'default': [
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1604594849809-dfedbc827105?w=400&h=300&fit=crop',
-  ],
-};
+// Image fallback — delegated to shared utility (getFallbackImage → getImageForCategory)
+export { getImageForCategory };
 
 // Curated financial news topics for Argentina & Region (fallback/demo content)
 const NEWS_TOPICS = [
@@ -72,13 +37,6 @@ const NEWS_TOPICS = [
   { title: 'Ethereum lidera las altcoins con ganancias semanales destacadas', category: 'Cripto', keywords: ['ethereum', 'altcoin', 'eth'] },
   { title: 'El sector energético impulsa nuevas inversiones en Argentina', category: 'Mercados', keywords: ['energia', 'ypf', 'vaca muerta'] },
 ];
-
-// Generate a deterministic but varied image based on article properties
-export function getImageForCategory(category: string, title: string = ''): string {
-  const images = CATEGORY_IMAGES[category] || CATEGORY_IMAGES['default'];
-  const index = Math.abs(title.length % images.length);
-  return images[index];
-}
 
 // Fetch articles from database
 async function fetchDBArticles(): Promise<NewsArticle[]> {

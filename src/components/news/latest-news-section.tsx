@@ -8,14 +8,12 @@ import { Card } from '@/components/ui/card';
 import { formatRelativeTime } from '@/lib/utils';
 import { Clock, ExternalLink, ChevronRight, Newspaper, TrendingUp } from 'lucide-react';
 import type { NewsArticle } from '@/lib/services/unified-news-service';
+import { getFallbackImage } from '@/lib/image-fallbacks';
 
 // Strip HTML tags from text
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
-
-// Default fallback image
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop';
 
 interface LatestNewsSectionProps {
   articles: NewsArticle[];
@@ -99,13 +97,14 @@ export function LatestNewsSection({ articles, showViewAll = true }: LatestNewsSe
 
 // ─── Hero Card: Big image with overlay text ─────────────────────────
 function NewsHeroCard({ article }: { article: NewsArticle }) {
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
+  const fallback = getFallbackImage(article.category, article.title);
+  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
     if (!imgError) {
       setImgError(true);
-      setImgSrc(FALLBACK_IMAGE);
+      setImgSrc(fallback);
     }
   };
 
@@ -167,13 +166,14 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
 
 // ─── Medium Card: Image left + text right (horizontal) ──────────────
 function NewsMediumCard({ article }: { article: NewsArticle }) {
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
+  const fallback = getFallbackImage(article.category, article.title);
+  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
     if (!imgError) {
       setImgError(true);
-      setImgSrc(FALLBACK_IMAGE);
+      setImgSrc(fallback);
     }
   };
 
@@ -221,13 +221,14 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
 
 // ─── Standard Card: Vertical image + text (for 3-column row) ────────
 function NewsStandardCard({ article }: { article: NewsArticle }) {
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
+  const fallback = getFallbackImage(article.category, article.title);
+  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
     if (!imgError) {
       setImgError(true);
-      setImgSrc(FALLBACK_IMAGE);
+      setImgSrc(fallback);
     }
   };
 
@@ -312,13 +313,14 @@ export function ExternalNewsCard({ article, compact = false }: ExternalNewsCardP
 
 // Horizontal variant for sidebar
 export function ExternalNewsCardHorizontal({ article }: { article: NewsArticle }) {
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
+  const fallback = getFallbackImage(article.category, article.title);
+  const [imgSrc, setImgSrc] = useState(article.imageUrl || fallback);
   const [imgError, setImgError] = useState(false);
 
   const handleImageError = () => {
     if (!imgError) {
       setImgError(true);
-      setImgSrc(FALLBACK_IMAGE);
+      setImgSrc(fallback);
     }
   };
 

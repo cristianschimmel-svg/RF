@@ -6,6 +6,7 @@
 
 import { BaseScraper } from './base-scraper';
 import type { NewsSource, ScrapedArticle, ScrapeResult } from './types';
+import { getFallbackImage } from '@/lib/image-fallbacks';
 
 interface RSSFeedConfig {
   source: NewsSource;
@@ -428,44 +429,8 @@ export class RSSScraper extends BaseScraper {
   }
 
   private getDefaultImage(): string {
-    // Use category-specific Unsplash images for reliable loading
-    const categoryImages: Record<string, string[]> = {
-      'Economía': [
-        'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1604594849809-dfedbc827105?w=600&h=400&fit=crop',
-      ],
-      'Finanzas': [
-        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop',
-      ],
-      'Mercados': [
-        'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=600&h=400&fit=crop',
-      ],
-      'Agro': [
-        'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=600&h=400&fit=crop',
-      ],
-      'Rosario': [
-        'https://images.unsplash.com/photo-1578469645742-46cae010e5d4?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=600&h=400&fit=crop',
-      ],
-      'Internacional': [
-        'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&h=400&fit=crop',
-      ],
-      'Cripto': [
-        'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=400&fit=crop',
-      ],
-    };
-    const images = categoryImages[this.feedCategory] || categoryImages['Economía'];
-    return images[Math.floor(Math.random() * images.length)];
+    // Use shared category-based fallback images
+    const randomTitle = Date.now().toString() + Math.random().toString();
+    return getFallbackImage(this.feedCategory, randomTitle);
   }
 }
