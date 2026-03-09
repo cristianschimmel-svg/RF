@@ -1,10 +1,8 @@
-import MainLayout from "@/components/layout/main-layout"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function ArticleLoading() {
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb Skeleton */}
         <div className="flex gap-2 mb-6">
           <Skeleton className="h-4 w-16" />
@@ -39,6 +37,4 @@ export default function ArticleLoading() {
           </div>
         </div>
       </div>
-    </MainLayout>
-  )
-}
+
