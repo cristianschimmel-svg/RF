@@ -22,8 +22,8 @@ export const metadata = {
 
 const tools = [
   {
-    title: 'Conversor de Dólares',
-    description: 'Convertí entre pesos argentinos y las distintas cotizaciones del dólar (oficial, blue, MEP, CCL, cripto).',
+    title: 'Cotizaciones del Dólar',
+    description: 'Consultá las distintas cotizaciones del dólar en tiempo real: oficial, blue, MEP, CCL y cripto.',
     icon: ArrowRightLeft,
     color: 'from-emerald-500 to-emerald-600',
     href: '/indicadores/dolar',
@@ -40,8 +40,8 @@ const tools = [
     available: true,
   },
   {
-    title: 'Monitor de Tasas',
-    description: 'Compará tasas de política monetaria, BADLAR, plazo fijo y UVA en tiempo real desde el BCRA.',
+    title: 'Tasas de Interés',
+    description: 'Consultá las tasas de referencia del BCRA: política monetaria, BADLAR, plazo fijo y más.',
     icon: TrendingUp,
     color: 'from-blue-500 to-blue-600',
     href: '/indicadores/tasas',

@@ -171,9 +171,19 @@ async function fetchExternalArticles(): Promise<NewsArticle[]> {
     
     const scrapedArticles = await scraperManager.fetchAllNews();
     
+    // Get URLs of soft-deleted articles to exclude from live RSS results
+    const deletedArticles = await prisma.processedNewsArticle.findMany({
+      where: { isDeleted: true },
+      select: { sourceUrl: true },
+    });
+    const deletedUrls = new Set(deletedArticles.map(a => a.sourceUrl));
+    
     // Apply the same relevance filter used by the processor (exclusion + finance keywords)
-    const filteredArticles = scrapedArticles.filter(isArticleRelevant);
-    console.log(`[NewsService] Live RSS: ${scrapedArticles.length} raw → ${filteredArticles.length} after relevance filter`);
+    // Also exclude articles that were soft-deleted by admin
+    const filteredArticles = scrapedArticles
+      .filter(a => !deletedUrls.has(a.url))
+      .filter(isArticleRelevant);
+    console.log(`[NewsService] Live RSS: ${scrapedArticles.length} raw → ${filteredArticles.length} after relevance + deletion filter`);
     
     if (filteredArticles.length > 0) {
       console.log(`[NewsService] Got ${filteredArticles.length} relevant live articles from RSS feeds`);

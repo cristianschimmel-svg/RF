@@ -7,7 +7,7 @@
 import { API_CONFIG, BCRA_VARIABLE_IDS } from '../api-config';
 import { cache, rateLimiter } from '../cache';
 import type { Indicator, IndicatorSource } from '@/types';
-import { fetchInflacionMensual, fetchInflacionInteranual, fetchRiesgoPais, fetchTasaPlazoFijo } from './argentina-datos';
+import { fetchInflacionMensual, fetchInflacionInteranual, fetchRiesgoPais, fetchTasaPlazoFijo, fetchTasaDepositos30Dias } from './argentina-datos';
 
 interface BCRAPrincipalVariable {
   idVariable: number;
@@ -292,7 +292,7 @@ async function getBackupData(): Promise<Indicator[]> {
       indicators.push(createEmptyIndicator('bcra-28', 'Inflación Interanual', 'Inflación i.a.', 'inflacion', '%', now));
     }
 
-    // Intentar obtener riesgo país
+    // Intentar obtener tasas de interés
     const plazoFijo = await fetchTasaPlazoFijo();
       if (plazoFijo) {
         indicators.push({
@@ -300,6 +300,14 @@ async function getBackupData(): Promise<Indicator[]> {
           id: 'bcra-6',
         });
       }
+
+    const badlar = await fetchTasaDepositos30Dias();
+    if (badlar) {
+      indicators.push({
+        ...badlar,
+        id: 'bcra-7',
+      });
+    }
 
       const riesgoPais = await fetchRiesgoPais();
     if (riesgoPais) {
@@ -329,7 +337,7 @@ function createEmptyIndicator(
   id: string,
   name: string,
   shortName: string,
-  category: 'inflacion' | 'actividad' | 'tasas' | 'cambios',
+  category: 'inflacion' | 'actividad' | 'tasas' | 'cambios' | 'riesgo',
   unit: string,
   timestamp: string
 ): Indicator {

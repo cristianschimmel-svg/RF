@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const articles = await prisma.processedNewsArticle.findMany({
+      where: { isDeleted: false },
       orderBy: { publishedAt: 'desc' },
       select: {
         id: true,
@@ -69,19 +70,20 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Se requiere un array de IDs' }, { status: 400 });
     }
 
-    // Delete from DB
-    const result = await prisma.processedNewsArticle.deleteMany({
+    // Soft-delete: mark as deleted so RSS fallback won't re-introduce them
+    const result = await prisma.processedNewsArticle.updateMany({
       where: { id: { in: ids } },
+      data: { isDeleted: true },
     });
 
     // Invalidate all news caches so the homepage reflects the change immediately
     invalidateNewsCache();
 
-    // Revalidate pages that show news
-    revalidatePath('/', 'page');
-    revalidatePath('/noticias', 'page');
+    // Revalidate pages that show news (use 'layout' to cover route groups)
+    revalidatePath('/');
+    revalidatePath('/noticias');
 
-    console.log(`[Admin] Deleted ${result.count} scraped news articles. IDs: ${ids.join(', ')}`);
+    console.log(`[Admin] Soft-deleted ${result.count} scraped news articles. IDs: ${ids.join(', ')}`);
 
     return NextResponse.json({
       success: true,

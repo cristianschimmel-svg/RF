@@ -257,6 +257,20 @@ function buildIndicatorGroups(
     });
   }
 
+  // Riesgo País
+  const riesgoIndicators = bcra.filter(
+    (i) => i.category === 'riesgo' || i.shortName.toLowerCase().includes('embi') || i.shortName.toLowerCase().includes('riesgo')
+  );
+  if (riesgoIndicators.length > 0) {
+    groups.push({
+      id: 'group-riesgo',
+      name: 'Riesgo País',
+      category: 'riesgo',
+      description: 'Índice EMBI+ de JP Morgan',
+      indicators: riesgoIndicators,
+    });
+  }
+
   // Cripto
   if (crypto.length > 0) {
     groups.push({

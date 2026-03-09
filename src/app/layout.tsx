@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_AR',
-    url: 'https://rosariofinanzas.com.ar',
+    url: 'https://rosariofinanzas.ar',
     siteName: 'Rosario Finanzas',
     title: 'Rosario Finanzas - Indicadores Económicos en Tiempo Real',
     description:

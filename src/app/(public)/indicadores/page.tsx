@@ -23,12 +23,13 @@ export default async function IndicadoresOverviewPage() {
   const categoryInflacion = overview.groups.find((g) => g.category === 'inflacion')?.indicators || [];
   const categoryTasas = overview.groups.find((g) => g.category === 'tasas')?.indicators || [];
   const categoryActividad = overview.groups.find((g) => g.category === 'actividad')?.indicators || [];
+  const categoryRiesgo = overview.groups.find((g) => g.category === 'riesgo')?.indicators || [];
   const categoryCambios = overview.groups.find((g) => g.category === 'cambios')?.indicators || [];
 
-  // Agregar Riesgo País si no está ya en actividad
-  const allActividad = [...categoryActividad];
-  if (riesgoPaisData && !allActividad.find(i => i.id === riesgoPaisData.id)) {
-    allActividad.unshift(riesgoPaisData);
+  // Agregar Riesgo País desde fetch directo si no está ya en el grupo
+  const allRiesgo = [...categoryRiesgo];
+  if (riesgoPaisData && !allRiesgo.find(i => i.id === riesgoPaisData.id)) {
+    allRiesgo.unshift(riesgoPaisData);
   }
 
   return (
@@ -67,20 +68,34 @@ export default async function IndicadoresOverviewPage() {
         </CardContent>
       </Card>
 
-      {/* Sección 2: Actividad y Riesgo País */}
+      {/* Sección 2: Riesgo País */}
       <Card>
-        <CardHeader title="Riesgo País y Actividad Económica" />
+        <CardHeader title="Riesgo País" />
         <CardContent>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-            {allActividad.map(ind => (
+            {allRiesgo.map(ind => (
               <MiniIndicator key={ind.id} indicator={ind} showIcon={true} />
             ))}
-            {allActividad.length === 0 && (
+            {allRiesgo.length === 0 && (
               <p className="text-sm text-text-muted col-span-3">No hay datos disponibles.</p>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Sección 2b: Actividad Económica */}
+      {categoryActividad.length > 0 && (
+        <Card>
+          <CardHeader title="Actividad Económica" />
+          <CardContent>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+              {categoryActividad.map(ind => (
+                <MiniIndicator key={ind.id} indicator={ind} showIcon={true} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Sección 3: Tasas de Interés */}
       <Card>

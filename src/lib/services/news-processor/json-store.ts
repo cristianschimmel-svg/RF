@@ -326,6 +326,8 @@ export async function upsertArticles(
 export async function getProcessedArticles(): Promise<ProcessedNews[]> {
   const rows = await prisma.processedNewsArticle.findMany({
     where: {
+      // Exclude soft-deleted articles
+      isDeleted: false,
       // Do not return articles that were explicitly rejected by AI
       // Must use OR with null check to avoid SQL NULL comparison trap
       OR: [
@@ -347,6 +349,7 @@ export async function getArticlesByCategory(category: string): Promise<Processed
   const rows = await prisma.processedNewsArticle.findMany({
     where: { 
       category: { equals: category, mode: 'insensitive' },
+      isDeleted: false,
       OR: [
         { processingError: null },
         { processingError: { not: { startsWith: 'AI Rejected' } } },

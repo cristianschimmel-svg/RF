@@ -70,12 +70,14 @@ Genera un análisis profesional y completo que incluya:
 2. PUNTOS CLAVE: 4-5 puntos destacados con datos concretos
 3. ANÁLISIS DE IMPACTO: Cómo afecta a inversores, al agro, al dólar o a los mercados
 4. SENTIMIENTO: Si la noticia es positiva, negativa o neutral para los mercados argentinos
+5. DATO CLAVE OBLIGATORIO: Si la noticia gira en torno a un dato numérico concreto (cotización, precio, porcentaje de inflación, índice, tasa), ese dato exacto DEBE aparecer en el "summary" y como primer item de "keyPoints" con la cifra, unidad y referencia temporal
 
 ## CONTEXTO ARGENTINO IMPORTANTE:
 - Considera el impacto en el dólar (oficial, blue, MEP, CCL)
 - Relaciona con commodities agrícolas si aplica (soja, maíz, trigo)
 - Menciona efectos en el MERVAL o bonos si es relevante
 - Usa terminología que los inversores argentinos entienden
+- NUNCA omitas la cifra central cuando la noticia es sobre un valor/precio específico (ej: cotización del dólar, precio de commodities, porcentaje de inflación). El dato numérico exacto es la información más valiosa para el lector.
 
 Responde EXACTAMENTE en este formato JSON (sin markdown, solo JSON puro):
 {

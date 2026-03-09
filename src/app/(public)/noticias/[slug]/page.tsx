@@ -283,17 +283,17 @@ export default async function ArticlePage({ params }: PageProps) {
               <div className="flex gap-2">
                 <ShareButton
                   platform="twitter"
-                  url={`https://rosariofinanzas.com.ar/noticias/${article.slug}`}
+                  url={`https://rosariofinanzas.ar/noticias/${article.slug}`}
                   title={article.title}
                 />
                 <ShareButton
                   platform="facebook"
-                  url={`https://rosariofinanzas.com.ar/noticias/${article.slug}`}
+                  url={`https://rosariofinanzas.ar/noticias/${article.slug}`}
                   title={article.title}
                 />
                 <ShareButton
                   platform="linkedin"
-                  url={`https://rosariofinanzas.com.ar/noticias/${article.slug}`}
+                  url={`https://rosariofinanzas.ar/noticias/${article.slug}`}
                   title={article.title}
                 />
               </div>

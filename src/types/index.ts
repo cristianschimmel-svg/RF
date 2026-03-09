@@ -7,6 +7,7 @@ export type IndicatorCategory =
   | 'inflacion'
   | 'tasas'
   | 'actividad'
+  | 'riesgo'
   | 'mercados'
   | 'agro'
   | 'cripto'

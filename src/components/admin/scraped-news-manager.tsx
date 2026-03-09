@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatRelativeTime } from '@/lib/utils';
 import {
   Newspaper,
@@ -30,6 +31,7 @@ interface ScrapedArticle {
 }
 
 export function ScrapedNewsManager() {
+  const router = useRouter();
   const [articles, setArticles] = useState<ScrapedArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -110,6 +112,8 @@ export function ScrapedNewsManager() {
         setSelected(new Set());
         // Refresh the list
         await fetchArticles();
+        // Force Next.js to invalidate client-side router cache
+        router.refresh();
       } else {
         setMessage({ type: 'error', text: data.error || 'Error al eliminar' });
       }

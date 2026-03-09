@@ -68,10 +68,11 @@ ${contentToAnalyze}
 
 ## TU TAREA:
 
-1. Corrige el título si está cortado o mal formateado.
+1. Corrige el título si está cortado o mal formateado. Si el título original contiene un dato numérico (cotización, precio, porcentaje), el título corregido DEBE conservarlo.
 2. Genera una "bajada" (excerpt) limpia, de 1 o 2 oraciones, que resuma la noticia sin cortarse.
 3. Genera un resumen CONCISO pero completo de esta noticia. NO repitas textualmente el título ni la bajada. El lector debe entender la noticia sin necesidad de ir a la fuente original.
 4. Extrae los puntos clave.
+5. DATO CLAVE OBLIGATORIO: Si la noticia gira en torno a un dato numérico concreto (cotización, precio, porcentaje de inflación, índice, monto, tasa), DEBÉS extraer la cifra exacta e incluirla de forma prominente en el "summary" (resaltada con <strong>), en el "cleanExcerpt" y como primer item de "keyPoints". Ejemplos: si el título dice "a cuánto cotiza el dólar blue", el resumen DEBE incluir el valor exacto (ej: $1.250); si dice "se conoce la inflación de febrero", DEBE incluir el porcentaje (ej: 3,2%); si dice "a cuánto cotiza el girasol", DEBE incluir el precio.
 
 ## FORMATO DE RESPUESTA (JSON estricto):
 
@@ -97,6 +98,7 @@ ${contentToAnalyze}
 6. Si es agro: menciona commodities, precios, clima
 7. Si es finanzas: menciona dólar, MERVAL, bonos, tasas
 8. Tono profesional, directo y accesible
+9. NUNCA omitas la cifra central de la noticia. Si el título o contenido menciona un valor numérico concreto (cotización, precio, porcentaje, tasa, índice), ese dato SIEMPRE debe aparecer en el summary resaltado con <strong> y como primer keyPoint con la cifra exacta, unidad y referencia temporal. Ejemplo: "Dólar blue: $1.250 al cierre del 8 de marzo", "Inflación febrero: 3,2% mensual".
 
 Responde SOLO con el JSON, sin markdown ni texto adicional.`;
 
@@ -113,7 +115,7 @@ Responde SOLO con el JSON, sin markdown ni texto adicional.`;
           },
         ],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 0.5,
           topP: 0.9,
           maxOutputTokens: 2048,
         },

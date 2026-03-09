@@ -179,7 +179,7 @@ export async function fetchRiesgoPais(): Promise<Indicator | null> {
       id: 'argentinadatos-riesgo-pais',
       name: 'Riesgo País',
       shortName: 'EMBI+',
-      category: 'actividad',
+      category: 'riesgo',
       value: data.valor,
       previousValue: data.valor, // No tenemos el anterior en este endpoint
       change: 0,
@@ -366,6 +366,50 @@ export async function fetchTasaPlazoFijo(): Promise<Indicator | null> {
     return indicator;
   } catch (error) {
     console.error('Error fetching ArgentinaDatos plazo fijo:', error);
+    return null;
+  }
+}
+
+// Fetch BADLAR backup from ArgentinaDatos
+export async function fetchTasaDepositos30Dias(): Promise<Indicator | null> {
+  const cacheKey = 'argentinadatos:depositos30dias';
+  const cached = cache.get<Indicator>(cacheKey);
+
+  if (cached) return cached;
+
+  try {
+    const url = `${API_CONFIG.argentinaDatos.baseUrl}/v1/finanzas/tasas/depositos30Dias`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' }, next: { revalidate: 3600 } });
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    const latest = data[data.length - 1];
+    if (!latest || typeof latest.valor !== 'number') return null;
+
+    const indicator: Indicator = {
+      id: 'argentinadatos-badlar',
+      name: 'BADLAR Bancos Privados',
+      shortName: 'BADLAR',
+      category: 'tasas',
+      value: latest.valor,
+      previousValue: latest.valor,
+      change: 0,
+      changePercent: 0,
+      unit: '%',
+      format: 'percent',
+      decimals: 2,
+      source: 'ArgentinaDatos (respaldo)',
+      sourceUrl: 'https://argentinadatos.com',
+      lastUpdated: latest.fecha || new Date().toISOString(),
+      frequency: 'daily',
+    };
+
+    cache.set(cacheKey, indicator, API_CONFIG.argentinaDatos.cacheTTL);
+    return indicator;
+  } catch (error) {
+    console.error('Error fetching ArgentinaDatos depositos30Dias:', error);
     return null;
   }
 }

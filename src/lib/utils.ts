@@ -307,7 +307,7 @@ export function getProxyImageUrl(url: string | undefined | null): string {
   }
 
   // Allowed domains that don't need proxying
-  if (url.includes('rosariofinanzas.com.ar') || url.includes('unsplash.com')) {
+  if (url.includes('rosariofinanzas.ar') || url.includes('unsplash.com')) {
     return url;
   }
 

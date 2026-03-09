@@ -196,10 +196,12 @@ model ProcessedNewsArticle {
   processedAt      DateTime @default(now())
   isProcessed      Boolean  @default(false)
   processingError  String?
+  isDeleted        Boolean  @default(false)
 
   @@index([category])
   @@index([publishedAt])
   @@index([isProcessed])
+  @@index([isDeleted])
   @@map("processed_news_articles")
 }
 

@@ -28,7 +28,7 @@ import {
   Star,
 } from 'lucide-react';
 
-export const revalidate = 300; // Revalidate every 5 minutes for fresh news
+export const revalidate = 60; // Revalidate every minute for fresh news
 
 // Metadata
 export const metadata = {
