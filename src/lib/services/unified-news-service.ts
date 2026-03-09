@@ -331,7 +331,7 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
         author: dbArticle.author?.name || 'Redacción RF',
         isEditorial: true,
         isExternal: false,
-        content: dbArticle.content,
+        content: dbArticle.content ?? undefined,
       };
 
       return {
