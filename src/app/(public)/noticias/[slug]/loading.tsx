@@ -36,5 +36,6 @@ export default function ArticleLoading() {
             <Skeleton className="h-4 w-9/12" />
           </div>
         </div>
-      </div>
-
+    </div>
+  )
+}
