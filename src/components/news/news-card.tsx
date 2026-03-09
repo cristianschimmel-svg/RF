@@ -29,7 +29,7 @@ export function NewsCard({
   author,
 }: NewsCardProps) {
   return (
-    <Link href={`/noticias/${slug}`} className="group block">
+    <Link href={`/noticias/${slug}`} prefetch={true} className="group block">
       <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow">
         {/* Image */}
         <div className="relative aspect-video bg-surface-secondary overflow-hidden">
@@ -89,7 +89,7 @@ export function NewsFeatured({
   author,
 }: NewsCardProps) {
   return (
-    <Link href={`/noticias/${slug}`} className="group block">
+    <Link href={`/noticias/${slug}`} prefetch={true} className="group block">
       <Card className="overflow-hidden hover:shadow-xl transition-shadow">
         <div className="grid md:grid-cols-2 gap-0">
           {/* Image */}
@@ -155,6 +155,7 @@ export function NewsCardCompact({
   return (
     <Link
       href={`/noticias/${slug}`}
+      prefetch={true}
       className="block group p-3 rounded-lg hover:bg-interactive-hover transition-colors"
     >
       <div className="flex items-start gap-2 mb-1">
@@ -182,7 +183,7 @@ export function NewsCardHorizontal({
   author,
 }: NewsCardProps) {
   return (
-    <Link href={`/noticias/${slug}`} className="group block">
+    <Link href={`/noticias/${slug}`} prefetch={true} className="group block">
       <Card className="overflow-hidden hover:shadow-lg transition-shadow">
         <div className="flex">
           {/* Image */}

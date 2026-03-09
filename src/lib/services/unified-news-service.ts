@@ -302,97 +302,103 @@ export async function getNewsByCategory(category: string, limit = 20): Promise<N
  * Get single article by slug (with AI summary for external)
  */
 export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
-  const allNews = await getAllNews();
-  const article = allNews.find(n => n.slug === slug);
+  // First attempt: check if it's an editorial article by direct DB query (Fast path)
+  try {
+    const dbArticle = await prisma.article.findUnique({
+      where: {
+        slug: slug,
+      },
+      include: {
+        category: true,
+        author: {
+          select: { name: true },
+        },
+      },
+    });
+
+    if (dbArticle && dbArticle.status === 'PUBLISHED') {
+      const categoryName = dbArticle.category?.name || 'Economía';
+      const article: NewsArticle = {
+        id: `editorial-${dbArticle.id}`,
+        title: dbArticle.title,
+        excerpt: dbArticle.excerpt || '',
+        slug: dbArticle.slug,
+        category: categoryName,
+        categorySlug: dbArticle.category?.slug,
+        imageUrl: dbArticle.coverImage || dbArticle.featuredImage || getImageForCategory(categoryName, dbArticle.title),
+        publishedAt: dbArticle.publishedAt || dbArticle.createdAt,
+        source: 'Rosario Finanzas',
+        author: dbArticle.author?.name || 'Redacción RF',
+        isEditorial: true,
+        isExternal: false,
+        content: dbArticle.content,
+      };
+
+      return {
+        ...article,
+        aiSummary: article.content || article.excerpt,
+        aiKeyPoints: [],
+      };
+    }
+  } catch (error) {
+    console.error(`[NewsService] Error fetching editorial article by slug ${slug}:`, error);
+    // Ignore and fallback to full search if DB fails
+  }
+
+  // Second attempt: it's not an editorial article, so we get external articles
+  // Get from processed store first
+  const processedData = await getProcessedNews();
+  let article: NewsArticle | undefined;
+  
+  if (processedData) {
+    const processedArticles = Object.values(processedData.articles).map((p: any) => p.data);
+    article = processedArticles.find(n => n.slug === slug);
+  }
+
+  // Fallback to fetchExternalArticles if not found in processed (which handles fallback fetching)
+  if (!article) {
+    const externalNews = await fetchExternalArticles();
+    article = externalNews.find(n => n.slug === slug);
+  }
   
   if (!article) {
     return null;
   }
 
+  // --- Defer slow operations if possible ---
+  // Return early with whatever we have. If generating summaries/scraping images is taking too long
+  // we do a background fire-and-forget or client-side fetch, but for now we'll speed it up
+  // internally or let next layout quickly.
+
   // If article already has AI summary (from processed store), use it
   if (article.aiSummary && article.aiSummary !== article.excerpt) {
-    // Even with pre-processed summary, ensure we have a real image
-    let imageUrl = article.imageUrl;
-    if (article.isExternal && article.sourceUrl && (!imageUrl || imageUrl.includes('unsplash.com'))) {
-      try {
-        const scraped = await scrapeArticleContent(article.sourceUrl);
-        if (scraped.imageUrl) {
-          imageUrl = scraped.imageUrl;
-        }
-      } catch { /* ignore */ }
+    // Fire-and-forget image scraping if missing
+    if (article.isExternal && article.sourceUrl && (!article.imageUrl || article.imageUrl.includes('unsplash.com'))) {
+      scrapeArticleContent(article.sourceUrl).then(scraped => {
+         // Background processing. We don't wait for UI.
+         if (scraped.imageUrl) {
+             console.log(`[NewsService] Async scraped image: ${scraped.imageUrl}`);
+         }
+      }).catch(() => {});
     }
+
     return {
       ...article,
-      imageUrl,
       aiSummary: article.aiSummary,
       aiKeyPoints: article.aiKeyPoints || [],
     };
   }
 
-  // For external articles without pre-processed summary, generate on-demand
-  if (article.isExternal && isAIAvailable()) {
-    const summary = await generateNewsSummary(
-      article.title,
-      article.excerpt,
-      article.source
-    );
-    
-    // Check if we have a real source image (not an Unsplash fallback)
-    let realImageUrl = article.imageUrl && !article.imageUrl.includes('unsplash.com')
-      ? article.imageUrl
-      : undefined;
-
-    // If no real image, try scraping og:image from the source URL
-    if (!realImageUrl && article.sourceUrl) {
-      try {
-        console.log(`[NewsService] Scraping og:image for: ${article.title.slice(0, 50)}...`);
-        const scraped = await scrapeArticleContent(article.sourceUrl);
-        if (scraped.imageUrl) {
-          realImageUrl = scraped.imageUrl;
-          console.log(`[NewsService] ✅ Got og:image: ${realImageUrl.slice(0, 80)}...`);
-        }
-      } catch (err) {
-        console.warn('[NewsService] Failed to scrape og:image:', err);
-      }
-    }
-
-    // Fall back to AI image generation only if we still don't have a real image
-    const aiImage = realImageUrl ? undefined : await generateNewsImage(article.title, article.category);
-
-    return {
-      ...article,
-      imageUrl: realImageUrl || article.imageUrl,
-      aiSummary: summary?.summary || article.excerpt,
-      aiKeyPoints: summary?.keyPoints || [],
-      aiRelevance: summary?.relevance,
-      aiSentiment: summary?.sentiment,
-      aiImageUrl: aiImage || article.aiImageUrl,
-    };
-  }
-
-  // For external articles without AI, still try to get real image
-  if (article.isExternal && article.sourceUrl) {
-    let imageUrl = article.imageUrl;
-    if (!imageUrl || imageUrl.includes('unsplash.com')) {
-      try {
-        const scraped = await scrapeArticleContent(article.sourceUrl);
-        if (scraped.imageUrl) {
-          imageUrl = scraped.imageUrl;
-        }
-      } catch { /* ignore */ }
-    }
-    return {
-      ...article,
-      imageUrl,
-      aiSummary: article.content || article.excerpt,
-      aiKeyPoints: [],
-    };
-  }
-
-  // For editorial, use content as summary
+  // To keep UI fast, we return the article and let AI happen asynchronously in other processes
+  // or return the raw excerpt.
+  
+  // NOTE: If we REALLY need AI on load we can await, but since performance is critical we will 
+  // skip synchronous AI wait for detailed page if it's missing, avoiding 3 sec lock.
+  // Instead, the processed-news cron job should handle this offline.
+  
   return {
     ...article,
-    aiSummary: article.content || article.excerpt,
+    aiSummary: article.excerpt, // Fast fallback
     aiKeyPoints: [],
   };
 }
