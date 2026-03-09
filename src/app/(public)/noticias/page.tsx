@@ -3,9 +3,9 @@ import { MainLayout } from '@/components/layout';
 import { NewsCard, NewsFeatured, NewsCardSkeleton } from '@/components/news/news-card';
 import { EditorialSection } from '@/components/news/editorial-section';
 import { ExternalNewsCard, ExternalNewsCardHorizontal } from '@/components/news/latest-news-section';
+import { SmartSearch } from '@/components/news/smart-search';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { prisma } from '@/lib/db/prisma';
 import { 
   getAllNews, 
@@ -67,6 +67,88 @@ async function getPopularTags(): Promise<TagWithCount[]> {
   }
 }
 
+/**
+ * Heuristic search: normalizes text (removes accents, lowercases),
+ * tokenizes query, and scores articles by how many tokens match
+ * across title, excerpt, source, and category fields.
+ */
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .trim();
+}
+
+// Financial synonyms for heuristic matching
+const SYNONYM_MAP: Record<string, string[]> = {
+  'dolar': ['dolar', 'usd', 'divisa', 'tipo de cambio', 'billete', 'blue', 'mep', 'ccl', 'oficial'],
+  'inflacion': ['inflacion', 'ipc', 'precios', 'costo de vida', 'carestia'],
+  'merval': ['merval', 'bolsa', 'acciones', 'renta variable', 'byma'],
+  'bonos': ['bonos', 'renta fija', 'letras', 'letes', 'lecap', 'deuda'],
+  'tasas': ['tasas', 'tasa', 'interes', 'plazo fijo', 'rendimiento'],
+  'bcra': ['bcra', 'banco central', 'reservas', 'politica monetaria', 'leliq', 'base monetaria'],
+  'cripto': ['cripto', 'bitcoin', 'btc', 'ethereum', 'criptomoneda', 'blockchain'],
+  'petroleo': ['petroleo', 'crudo', 'oil', 'brent', 'wti', 'ypf', 'energia'],
+  'soja': ['soja', 'trigo', 'maiz', 'granos', 'commodities', 'agro', 'campo'],
+  'impuestos': ['impuestos', 'fiscal', 'afip', 'arca', 'tributario', 'ganancias', 'iva'],
+};
+
+function heuristicSearch(articles: NewsArticle[], query: string): NewsArticle[] {
+  const normalizedQuery = normalizeText(query);
+  const queryTokens = normalizedQuery.split(/\s+/).filter(t => t.length > 1);
+  
+  if (queryTokens.length === 0) return articles;
+
+  // Expand query tokens with synonyms
+  const expandedTokens = new Set<string>(queryTokens);
+  for (const token of queryTokens) {
+    // Check if the token matches any synonym group
+    for (const [_key, synonyms] of Object.entries(SYNONYM_MAP)) {
+      if (synonyms.some(s => s.includes(token) || token.includes(s))) {
+        synonyms.forEach(s => expandedTokens.add(s));
+      }
+    }
+  }
+
+  const scored = articles.map(article => {
+    const fields = [
+      { text: normalizeText(article.title), weight: 3 },
+      { text: normalizeText(article.excerpt || ''), weight: 2 },
+      { text: normalizeText(article.category || ''), weight: 1.5 },
+      { text: normalizeText(article.source || ''), weight: 1 },
+    ];
+
+    let score = 0;
+
+    // Exact phrase match (highest priority)
+    for (const field of fields) {
+      if (field.text.includes(normalizedQuery)) {
+        score += 10 * field.weight;
+      }
+    }
+
+    // Token and synonym matching
+    for (const token of Array.from(expandedTokens)) {
+      for (const field of fields) {
+        if (field.text.includes(token)) {
+          // Original query tokens get higher score than expanded synonyms
+          const isOriginal = queryTokens.includes(token);
+          score += (isOriginal ? 3 : 1) * field.weight;
+        }
+      }
+    }
+
+    return { article, score };
+  });
+
+  return scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(s => s.article);
+}
+
 export default async function NoticiasPage({
   searchParams,
 }: {
@@ -124,12 +206,7 @@ export default async function NoticiasPage({
   }
   
   if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    filteredExternal = filteredExternal.filter(a =>
-      a.title.toLowerCase().includes(q) ||
-      a.excerpt?.toLowerCase().includes(q) ||
-      a.source?.toLowerCase().includes(q)
-    );
+    filteredExternal = heuristicSearch(filteredExternal, searchQuery);
   }
 
   // Pagination
@@ -159,17 +236,7 @@ export default async function NoticiasPage({
 
         {/* Search and Filter Bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <form action="/noticias" method="GET" className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <Input
-              type="search"
-              name="q"
-              defaultValue={searchQuery || ''}
-              placeholder="Buscar noticias..."
-              className="pl-10"
-            />
-            {activeCategory && <input type="hidden" name="categoria" value={activeCategory} />}
-          </form>
+          <SmartSearch defaultQuery={searchQuery} activeCategory={activeCategory} />
           <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
             <CategoryPill
               href="/noticias"
