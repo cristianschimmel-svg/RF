@@ -347,12 +347,28 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
 
   // Second attempt: it's not an editorial article, so we get external articles
   // Get from processed store first
-  const processedData = await getProcessedNews();
+  const processedNews = await getProcessedNews();
   let article: NewsArticle | undefined;
   
-  if (processedData) {
-    const processedArticles = Object.values(processedData.articles).map((p: any) => p.data);
-    article = processedArticles.find(n => n.slug === slug);
+  if (processedNews && processedNews.length > 0) {
+    const mapped = processedNews.map((p: ProcessedNews) => ({
+      id: p.id,
+      title: p.title,
+      excerpt: p.header,
+      slug: p.id,
+      category: p.category,
+      imageUrl: p.sourceImageUrl || p.aiImageUrl || getImageForCategory(p.category, p.title),
+      publishedAt: new Date(p.publishedAt),
+      source: p.sourceName,
+      sourceUrl: p.sourceUrl,
+      isEditorial: false,
+      isExternal: true,
+      aiSummary: p.aiSummary,
+      aiKeyPoints: p.aiKeyPoints,
+      aiImageUrl: p.aiImageUrl || undefined,
+      content: p.originalContent,
+    }));
+    article = mapped.find(n => n.slug === slug);
   }
 
   // Fallback to fetchExternalArticles if not found in processed (which handles fallback fetching)
