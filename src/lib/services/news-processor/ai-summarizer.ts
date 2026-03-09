@@ -11,6 +11,8 @@ interface SummaryResult {
   cleanExcerpt?: string;
   summary: string;
   keyPoints: string[];
+  sentiment?: 'very_positive' | 'positive' | 'neutral' | 'negative' | 'very_negative';
+  relevance?: string;
   success: boolean;
   error?: string;
 }
@@ -86,7 +88,9 @@ ${contentToAnalyze}
     "Actor o entidad involucrada",
     "Implicancia para el lector",
     "Tendencia o perspectiva"
-  ]
+  ],
+  "sentiment": "very_positive|positive|neutral|negative|very_negative",
+  "relevance": "2-3 oraciones explicando por qué esta noticia importa a inversores, productores agrícolas o empresarios argentinos."
 }
 
 ## REGLAS IMPORTANTES:
@@ -99,6 +103,7 @@ ${contentToAnalyze}
 7. Si es finanzas: menciona dólar, MERVAL, bonos, tasas
 8. Tono profesional, directo y accesible
 9. NUNCA omitas la cifra central de la noticia. Si el título o contenido menciona un valor numérico concreto (cotización, precio, porcentaje, tasa, índice), ese dato SIEMPRE debe aparecer en el summary resaltado con <strong> y como primer keyPoint con la cifra exacta, unidad y referencia temporal. Ejemplo: "Dólar blue: $1.250 al cierre del 8 de marzo", "Inflación febrero: 3,2% mensual".
+10. SIEMPRE incluí "sentiment" y "relevance" en el JSON. El sentiment debe ser EXACTAMENTE uno de: very_positive, positive, neutral, negative, very_negative según el impacto de la noticia en los mercados argentinos.
 
 Responde SOLO con el JSON, sin markdown ni texto adicional.`;
 
@@ -186,11 +191,17 @@ Responde SOLO con el JSON, sin markdown ni texto adicional.`;
         }
       }
 
+      // Validate sentiment value
+      const validSentiments = ['very_positive', 'positive', 'neutral', 'negative', 'very_negative'] as const;
+      const sentiment = validSentiments.includes(parsed.sentiment) ? parsed.sentiment : undefined;
+
       return {
         cleanTitle: parsed.cleanTitle,
         cleanExcerpt: parsed.cleanExcerpt,
         summary,
         keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+        sentiment,
+        relevance: typeof parsed.relevance === 'string' ? parsed.relevance : undefined,
         success: true,
       };
     } catch (parseError) {

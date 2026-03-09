@@ -12,6 +12,8 @@ export interface ProcessedNews {
   // AI-generated content
   aiSummary: string;     // 3+ paragraphs summary by AI
   aiKeyPoints: string[]; // Key points extracted
+  aiSentiment?: 'very_positive' | 'positive' | 'neutral' | 'negative' | 'very_negative';
+  aiRelevance?: string;  // Why this news matters
   aiImageUrl?: string;   // Fallback image (category-based from Unsplash)
   // Source image
   sourceImageUrl?: string; // Original image from RSS/og:image

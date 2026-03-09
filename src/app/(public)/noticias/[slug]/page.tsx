@@ -392,27 +392,38 @@ export default async function ArticlePage({ params }: PageProps) {
   );
 }
 
-// Sentiment Badge Component
-function SentimentBadge({ sentiment }: { sentiment: 'positive' | 'negative' | 'neutral' }) {
-  const config = {
+// Sentiment Badge Component (5-level traffic light)
+function SentimentBadge({ sentiment }: { sentiment: string }) {
+  const config: Record<string, { icon: typeof TrendingUp; label: string; className: string }> = {
+    very_positive: {
+      icon: TrendingUp,
+      label: 'Muy Positivo',
+      className: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400',
+    },
     positive: {
       icon: TrendingUp,
       label: 'Positivo',
       className: 'bg-positive/10 text-positive border-positive/20',
-    },
-    negative: {
-      icon: TrendingDown,
-      label: 'Negativo',
-      className: 'bg-negative/10 text-negative border-negative/20',
     },
     neutral: {
       icon: Minus,
       label: 'Neutral',
       className: 'bg-surface-secondary text-text-muted',
     },
+    negative: {
+      icon: TrendingDown,
+      label: 'Negativo',
+      className: 'bg-negative/10 text-negative border-negative/20',
+    },
+    very_negative: {
+      icon: TrendingDown,
+      label: 'Muy Negativo',
+      className: 'bg-red-600/15 text-red-600 border-red-600/30 dark:text-red-400',
+    },
   };
 
-  const { icon: Icon, label, className } = config[sentiment];
+  const entry = config[sentiment] || config.neutral;
+  const { icon: Icon, label, className } = entry;
 
   return (
     <Badge variant="outline" size="sm" className={className}>

@@ -35,13 +35,15 @@ export interface NewsArticle {
   aiSummary?: string;
   aiKeyPoints?: string[];
   aiImageUrl?: string;
+  aiSentiment?: 'very_positive' | 'positive' | 'neutral' | 'negative' | 'very_negative';
+  aiRelevance?: string;
 }
 
 export interface NewsWithAI extends NewsArticle {
   aiSummary: string;
   aiKeyPoints: string[];
   aiRelevance?: string;
-  aiSentiment?: 'positive' | 'negative' | 'neutral';
+  aiSentiment?: 'very_positive' | 'positive' | 'neutral' | 'negative' | 'very_negative';
 }
 
 // ============================================
@@ -158,6 +160,8 @@ async function fetchExternalArticles(): Promise<NewsArticle[]> {
         aiSummary: article.aiSummary,
         aiKeyPoints: article.aiKeyPoints,
         aiImageUrl: article.aiImageUrl || undefined,
+        aiSentiment: article.aiSentiment,
+        aiRelevance: article.aiRelevance,
         content: article.originalContent,
       }));
     }
@@ -220,6 +224,8 @@ async function fetchExternalArticles(): Promise<NewsArticle[]> {
         aiSummary: article.aiSummary,
         aiKeyPoints: article.aiKeyPoints,
         aiImageUrl: article.aiImageUrl || undefined,
+        aiSentiment: article.aiSentiment,
+        aiRelevance: article.aiRelevance,
         content: article.originalContent,
       }));
     }
@@ -366,6 +372,8 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
       aiSummary: p.aiSummary,
       aiKeyPoints: p.aiKeyPoints,
       aiImageUrl: p.aiImageUrl || undefined,
+      aiSentiment: p.aiSentiment,
+      aiRelevance: p.aiRelevance,
       content: p.originalContent,
     }));
     article = mapped.find(n => n.slug === slug);

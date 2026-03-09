@@ -450,6 +450,8 @@ async function processArticle(article: ScrapedArticle): Promise<ProcessedNews> {
       if (summaryResult.success) {
         processed.aiSummary = summaryResult.summary;
         processed.aiKeyPoints = summaryResult.keyPoints;
+        processed.aiSentiment = summaryResult.sentiment;
+        processed.aiRelevance = summaryResult.relevance;
         
         // Use AI cleaned title and excerpt if available
         if (summaryResult.cleanTitle) {
