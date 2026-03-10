@@ -235,7 +235,11 @@ export default async function NoticiasPage({
         </header>
 
         {/* Search and Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col gap-3 mb-8">
+          <p className="text-xs text-text-muted dark:text-slate-400 leading-relaxed">
+            Probá nuestra búsqueda inteligente: escribí la palabra o clave que deseas y luego presioná el ícono de cerebro. Tendrás un resumen de noticias relacionadas.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
           <SmartSearch defaultQuery={searchQuery} activeCategory={activeCategory} />
           <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
             <CategoryPill
@@ -253,6 +257,7 @@ export default async function NoticiasPage({
                 active={activeCategory === category.slug}
               />
             ))}
+          </div>
           </div>
         </div>
 

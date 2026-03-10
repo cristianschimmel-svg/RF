@@ -15,6 +15,33 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
 
+// Shared text shadow style for overlay titles
+const overlayTextShadow = { textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' };
+
+// Get preview text from article
+function getPreviewText(article: NewsArticle): string {
+  if (article.aiSummary) return stripHtml(article.aiSummary).slice(0, 200);
+  if (article.excerpt) return stripHtml(article.excerpt).slice(0, 200);
+  return '';
+}
+
+// Hover preview wrapper
+function HoverPreview({ article, children }: { article: NewsArticle; children: React.ReactNode }) {
+  const preview = getPreviewText(article);
+  if (!preview) return <>{children}</>;
+  return (
+    <div className="relative group/preview">
+      {children}
+      <div className="pointer-events-none absolute z-40 left-2 right-2 bottom-full mb-2 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-200">
+        <div className="bg-gray-900 dark:bg-gray-800 text-white text-xs leading-relaxed p-3 rounded-lg shadow-xl border border-white/10 max-h-[120px] overflow-hidden">
+          <p className="line-clamp-4">{preview}</p>
+          <span className="text-accent text-2xs mt-1 block">Click para leer más →</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface LatestNewsSectionProps {
   articles: NewsArticle[];
   showViewAll?: boolean;
@@ -110,6 +137,7 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
 
   return (
     <Link href={`/noticias/${article.slug}`} className="group block h-full">
+      <HoverPreview article={article}>
       <Card className="overflow-hidden h-full hover:shadow-xl transition-all hover:border-accent/30 relative">
         <div className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden bg-surface-secondary">
           <Image
@@ -144,8 +172,8 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
           </div>
 
           {/* Content overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-4" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' }}>
-            <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-cyan-300 transition-colors mb-2 leading-tight">
+          <div className="absolute bottom-0 left-0 right-0 p-4" style={overlayTextShadow}>
+            <h3 className="font-bold text-lg sm:text-xl text-white group-hover:text-cyan-300 transition-colors mb-2 leading-tight">
               {article.title}
             </h3>
             {article.excerpt && (
@@ -160,6 +188,7 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
           </div>
         </div>
       </Card>
+      </HoverPreview>
     </Link>
   );
 }
@@ -179,6 +208,7 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
 
   return (
     <Link href={`/noticias/${article.slug}`} className="group block flex-1">
+      <HoverPreview article={article}>
       <Card className="overflow-hidden h-full hover:shadow-lg transition-all hover:border-accent/30 relative">
         <div className="relative h-full min-h-[160px] overflow-hidden bg-surface-secondary">
           <Image
@@ -208,8 +238,8 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
           </div>
 
           {/* Content overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-3" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' }}>
-            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
+          <div className="absolute bottom-0 left-0 right-0 p-3" style={overlayTextShadow}>
+            <h3 className="font-semibold text-base text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
               {article.title}
             </h3>
             <div className="flex items-center gap-1.5 text-2xs text-white/60">
@@ -219,6 +249,7 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
           </div>
         </div>
       </Card>
+      </HoverPreview>
     </Link>
   );
 }
@@ -238,6 +269,7 @@ function NewsStandardCard({ article }: { article: NewsArticle }) {
 
   return (
     <Link href={`/noticias/${article.slug}`} className="group block h-full">
+      <HoverPreview article={article}>
       <Card className="overflow-hidden h-full hover:shadow-lg transition-all hover:border-accent/30 relative">
         <div className="relative aspect-[16/10] overflow-hidden bg-surface-secondary">
           <Image
@@ -260,8 +292,8 @@ function NewsStandardCard({ article }: { article: NewsArticle }) {
           </div>
 
           {/* Content overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-3" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' }}>
-            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
+          <div className="absolute bottom-0 left-0 right-0 p-3" style={overlayTextShadow}>
+            <h3 className="font-semibold text-base text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
               {article.title}
             </h3>
             <div className="flex items-center justify-between text-2xs text-white/60">
@@ -274,6 +306,7 @@ function NewsStandardCard({ article }: { article: NewsArticle }) {
           </div>
         </div>
       </Card>
+      </HoverPreview>
     </Link>
   );
 }
@@ -297,7 +330,7 @@ function NewsCompactItem({ article }: { article: NewsArticle }) {
               {formatRelativeTime(article.publishedAt)}
             </span>
           </div>
-          <h4 className="text-xs sm:text-sm font-medium text-text-primary dark:text-white group-hover:text-accent transition-colors leading-snug">
+          <h4 className="text-sm sm:text-base font-medium text-text-primary dark:text-white group-hover:text-accent transition-colors leading-snug">
             {article.title}
           </h4>
         </div>

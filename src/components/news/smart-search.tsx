@@ -147,7 +147,7 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
           />
 
           {/* Modal content */}
-          <div className="relative w-full max-w-2xl max-h-[85vh] bg-surface-primary dark:bg-gray-900 rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col">
+          <div className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-gradient-to-r from-accent/5 to-transparent">
               <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
 
             {/* Footer */}
             {summary && (
-              <div className="px-6 py-3 border-t border-border bg-surface-secondary/50 flex items-center justify-between">
+              <div className="px-6 py-3 border-t border-border bg-gray-100/80 dark:bg-gray-800/50 flex items-center justify-between">
                 <p className="text-xs text-text-muted flex items-center gap-1.5">
                   <BrainCircuit className="w-3.5 h-3.5" />
                   Generado por Gemini AI · Rosario Finanzas

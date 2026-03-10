@@ -155,21 +155,6 @@ function LoginForm() {
                 )}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-surface-secondary rounded-lg">
-              <p className="text-xs text-text-muted text-center mb-2">
-                Credenciales de demo:
-              </p>
-              <div className="text-xs text-text-secondary text-center space-y-1">
-                <p>
-                  <strong>Email:</strong> admin@rosariofinanzas.com.ar
-                </p>
-                <p>
-                  <strong>Password:</strong> WenCri123$
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
