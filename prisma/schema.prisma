@@ -185,6 +185,8 @@ model ProcessedNewsArticle {
   originalContent  String   @default("")
   aiSummary        String   @default("")
   aiKeyPoints      String[] @default([])
+  aiSentiment      String?  // very_positive, positive, neutral, negative, very_negative
+  aiRelevance      String?  // Why this news matters for investors
   aiImageUrl       String?
   sourceImageUrl   String?
   sourceUrl        String

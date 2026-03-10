@@ -12,25 +12,8 @@ const STORE_VERSION = 1;
 
 // ─── helpers ───────────────────────────────────────────────────
 
-function articleToProcessed(row: {
-  id: string;
-  title: string;
-  header: string;
-  originalContent: string;
-  aiSummary: string;
-  aiKeyPoints: string[];
-  aiImageUrl: string | null;
-  sourceImageUrl: string | null;
-  sourceUrl: string;
-  sourceName: string;
-  sourceId: string;
-  category: string;
-  priority: number;
-  publishedAt: Date;
-  processedAt: Date;
-  isProcessed: boolean;
-  processingError: string | null;
-}): ProcessedNews {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function articleToProcessed(row: any): ProcessedNews {
   return {
     id: row.id,
     title: row.title,
@@ -38,6 +21,8 @@ function articleToProcessed(row: {
     originalContent: row.originalContent,
     aiSummary: row.aiSummary,
     aiKeyPoints: row.aiKeyPoints,
+    aiSentiment: row.aiSentiment ?? undefined,
+    aiRelevance: row.aiRelevance ?? undefined,
     aiImageUrl: row.aiImageUrl ?? undefined,
     sourceImageUrl: row.sourceImageUrl ?? undefined,
     sourceUrl: row.sourceUrl,
@@ -45,8 +30,8 @@ function articleToProcessed(row: {
     sourceId: row.sourceId,
     category: row.category,
     priority: row.priority,
-    publishedAt: row.publishedAt.toISOString(),
-    processedAt: row.processedAt.toISOString(),
+    publishedAt: row.publishedAt instanceof Date ? row.publishedAt.toISOString() : row.publishedAt,
+    processedAt: row.processedAt instanceof Date ? row.processedAt.toISOString() : row.processedAt,
     isProcessed: row.isProcessed,
     processingError: row.processingError ?? undefined,
   };
@@ -264,7 +249,7 @@ export async function upsertArticles(
 
     // Upsert each article
     for (const a of final) {
-      await tx.processedNewsArticle.upsert({
+      await (tx.processedNewsArticle.upsert as any)({
         where: { id: a.id },
         update: {
           title: a.title,
@@ -272,6 +257,8 @@ export async function upsertArticles(
           originalContent: a.originalContent,
           aiSummary: a.aiSummary,
           aiKeyPoints: a.aiKeyPoints,
+          aiSentiment: a.aiSentiment ?? null,
+          aiRelevance: a.aiRelevance ?? null,
           aiImageUrl: a.aiImageUrl ?? null,
           sourceImageUrl: a.sourceImageUrl ?? null,
           sourceUrl: a.sourceUrl,
@@ -291,6 +278,8 @@ export async function upsertArticles(
           originalContent: a.originalContent,
           aiSummary: a.aiSummary,
           aiKeyPoints: a.aiKeyPoints,
+          aiSentiment: a.aiSentiment ?? null,
+          aiRelevance: a.aiRelevance ?? null,
           aiImageUrl: a.aiImageUrl ?? null,
           sourceImageUrl: a.sourceImageUrl ?? null,
           sourceUrl: a.sourceUrl,
