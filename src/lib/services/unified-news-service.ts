@@ -9,6 +9,7 @@ import { prisma } from '@/lib/db/prisma';
 import { scraperManager } from './scrapers';
 import { generateNewsSummary, generateNewsImage, isAIAvailable } from './ai';
 import { getProcessedNews, isArticleRelevant, scrapeArticleContent, type ProcessedNews } from './news-processor';
+import { generateAISummary } from './news-processor/ai-summarizer';
 import type { ScrapedArticle } from './scrapers/types';
 import { getFallbackImage as getImageForCategory } from '@/lib/image-fallbacks';
 
@@ -416,9 +417,85 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
   // To keep UI fast, we return the article and let AI happen asynchronously in other processes
   // or return the raw excerpt.
   
-  // NOTE: If we REALLY need AI on load we can await, but since performance is critical we will 
-  // skip synchronous AI wait for detailed page if it's missing, avoiding 3 sec lock.
-  // Instead, the processed-news cron job should handle this offline.
+  // On-demand AI processing: generate AI summary for articles that don't have one
+  // This covers new articles that haven't been processed by the cron job yet
+  if (article.isExternal && article.sourceUrl && isAIAvailable()) {
+    try {
+      console.log(`[NewsService] On-demand AI processing for: ${article.title.slice(0, 60)}...`);
+      
+      // Scrape full content from source
+      let fullContent = article.content || '';
+      let scrapedImage: string | undefined;
+      
+      if (fullContent.length < 200) {
+        const scraped = await scrapeArticleContent(article.sourceUrl);
+        if (scraped.success && scraped.content) {
+          fullContent = scraped.content;
+        }
+        if (scraped.imageUrl) {
+          scrapedImage = scraped.imageUrl;
+        }
+      }
+
+      // Generate AI summary using the same pipeline as the cron processor
+      const aiResult = await generateAISummary(
+        article.title,
+        article.excerpt,
+        fullContent,
+        article.category,
+        article.source
+      );
+
+      if (aiResult.success) {
+        console.log(`[NewsService] ✅ On-demand AI summary generated for: ${slug}`);
+        
+        // Save to DB for future requests (fire-and-forget)
+        prisma.processedNewsArticle.upsert({
+          where: { id: slug },
+          create: {
+            id: slug,
+            title: aiResult.cleanTitle || article.title,
+            header: aiResult.cleanExcerpt || article.excerpt,
+            originalContent: fullContent,
+            aiSummary: aiResult.summary,
+            aiKeyPoints: aiResult.keyPoints,
+            aiSentiment: aiResult.sentiment || null,
+            aiRelevance: aiResult.relevance || null,
+            aiImageUrl: null,
+            sourceImageUrl: scrapedImage || article.imageUrl || null,
+            sourceUrl: article.sourceUrl,
+            sourceName: article.source,
+            sourceId: slug.replace(/-[^-]+$/, ''),
+            category: article.category,
+            publishedAt: article.publishedAt,
+            isProcessed: true,
+          },
+          update: {
+            aiSummary: aiResult.summary,
+            aiKeyPoints: aiResult.keyPoints,
+            aiSentiment: aiResult.sentiment || null,
+            aiRelevance: aiResult.relevance || null,
+            originalContent: fullContent,
+            sourceImageUrl: scrapedImage || article.imageUrl || null,
+            isProcessed: true,
+          },
+        }).catch(err => console.error('[NewsService] Failed to persist on-demand AI:', err));
+
+        return {
+          ...article,
+          title: aiResult.cleanTitle || article.title,
+          excerpt: aiResult.cleanExcerpt || article.excerpt,
+          imageUrl: scrapedImage || article.imageUrl,
+          aiSummary: aiResult.summary,
+          aiKeyPoints: aiResult.keyPoints,
+          aiSentiment: aiResult.sentiment as NewsWithAI['aiSentiment'],
+          aiRelevance: aiResult.relevance,
+        };
+      }
+    } catch (error) {
+      console.error('[NewsService] On-demand AI processing failed:', error);
+    }
+  }
   
   return {
     ...article,

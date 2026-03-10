@@ -12,6 +12,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '6mb',
     },
+    instrumentationHook: true,
   },
   // Rewrite /uploads/* to API route so dynamically uploaded files are served
   async rewrites() {

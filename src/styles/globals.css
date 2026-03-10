@@ -653,3 +653,23 @@ body {
     border: 1px solid #ddd;
   }
 }
+
+/* ============================================
+   GLOWING TEXT EFFECT
+   ============================================ */
+
+.text-glow {
+  color: var(--accent, #8B7355);
+  animation: textGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 2px transparent;
+    opacity: 0.75;
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(139, 115, 85, 0.4), 0 0 16px rgba(139, 115, 85, 0.15);
+    opacity: 1;
+  }
+}

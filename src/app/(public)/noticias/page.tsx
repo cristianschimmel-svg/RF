@@ -236,8 +236,8 @@ export default async function NoticiasPage({
 
         {/* Search and Filter Bar */}
         <div className="flex flex-col gap-3 mb-8">
-          <p className="text-xs text-text-muted dark:text-slate-400 leading-relaxed">
-            Probá nuestra búsqueda inteligente: escribí la palabra o clave que deseas y luego presioná el ícono de cerebro. Tendrás un resumen de noticias relacionadas.
+          <p className="text-sm font-semibold leading-relaxed text-glow">
+            Escribí una palabra o frase clave y presioná Enter o el ícono de Magic Brain. Obtendrás un briefing inteligente y las noticias filtradas al instante.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
           <SmartSearch defaultQuery={searchQuery} activeCategory={activeCategory} />
@@ -293,9 +293,6 @@ export default async function NoticiasPage({
                     <h2 className="text-lg font-bold text-text-primary dark:text-white">
                       INFORMES ESPECIALES
                     </h2>
-                    <p className="text-xs text-text-muted">
-                      Análisis exclusivo de nuestra redacción
-                    </p>
                   </div>
                 </div>
 

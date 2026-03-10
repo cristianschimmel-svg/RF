@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Search, BrainCircuit, X, Loader2 } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { Input } from '@/components/ui/input';
+
+const MagicBrainIcon = ({ size = 20, className = '' }: { size?: number; className?: string }) => (
+  <Image
+    src="/Fijos/Magic_Brain_Transparent.png"
+    alt="Magic Brain"
+    width={size}
+    height={size}
+    className={className}
+  />
+);
 
 interface SmartSearchProps {
   defaultQuery: string | null;
@@ -111,7 +122,28 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
 
   return (
     <>
-      <form ref={formRef} action="/noticias" method="GET" className="relative flex-1">
+      <form
+        ref={formRef}
+        action="/noticias"
+        method="GET"
+        className="relative flex-1"
+        onSubmit={(e) => {
+          e.preventDefault();
+          // Submit the form for filtering AND trigger AI briefing simultaneously
+          const query = inputRef.current?.value?.trim();
+          if (query) {
+            // Navigate to filtered results
+            const params = new URLSearchParams();
+            params.set('q', query);
+            if (activeCategory) params.set('categoria', activeCategory);
+            window.history.replaceState(null, '', `/noticias?${params.toString()}`);
+            // Also trigger the AI briefing
+            handleAISummary();
+            // Submit form natively for SSR filter
+            formRef.current?.submit();
+          }
+        }}
+      >
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
         <Input
           ref={inputRef}
@@ -125,13 +157,13 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
           type="button"
           onClick={handleAISummary}
           disabled={isLoading}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-accent/70 hover:text-accent transition-colors disabled:opacity-50 disabled:cursor-wait"
-          title="Resumen inteligente con IA — Analiza todas las noticias encontradas y genera un briefing ejecutivo"
+          className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-wait"
+          title="Magic Brain — Analiza noticias y genera un briefing ejecutivo"
         >
           {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin text-accent" />
           ) : (
-            <BrainCircuit className="w-5 h-5" />
+            <MagicBrainIcon size={24} />
           )}
         </button>
         {activeCategory && <input type="hidden" name="categoria" value={activeCategory} />}
@@ -151,8 +183,8 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-gradient-to-r from-accent/5 to-transparent">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center">
-                  <BrainCircuit className="w-5 h-5 text-white" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/10 to-purple-100 dark:from-accent/20 dark:to-purple-900/30 flex items-center justify-center">
+                  <MagicBrainIcon size={28} />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-text-primary dark:text-white">
@@ -178,8 +210,8 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {isLoading && (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center animate-pulse">
-                    <BrainCircuit className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent/10 to-purple-100 dark:from-accent/20 dark:to-purple-900/30 flex items-center justify-center animate-pulse">
+                    <MagicBrainIcon size={32} />
                   </div>
                   <p className="text-sm text-text-muted text-center">
                     Analizando noticias con inteligencia artificial...
@@ -209,8 +241,8 @@ export function SmartSearch({ defaultQuery, activeCategory }: SmartSearchProps) 
             {summary && (
               <div className="px-6 py-3 border-t border-border bg-gray-100/80 dark:bg-gray-800/50 flex items-center justify-between">
                 <p className="text-xs text-text-muted flex items-center gap-1.5">
-                  <BrainCircuit className="w-3.5 h-3.5" />
-                  Generado por Gemini AI · Rosario Finanzas
+                  <MagicBrainIcon size={16} />
+                  Generado por Magic Brain - AI Responsive
                 </p>
                 <button
                   onClick={closeModal}

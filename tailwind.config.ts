@@ -121,6 +121,7 @@ const config: Config = {
         'slide-up': 'slideUp 0.3s ease-out',
         'slide-down': 'slideDown 0.2s ease-out',
         'ticker': 'ticker 30s linear infinite',
+        'shimmer': 'shimmer 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -138,6 +139,10 @@ const config: Config = {
         ticker: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
+        },
+        shimmer: {
+          '0%, 100%': { backgroundPosition: '200% center' },
+          '50%': { backgroundPosition: '0% center' },
         },
       },
       backgroundImage: {
