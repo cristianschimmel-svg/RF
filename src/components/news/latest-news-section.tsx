@@ -145,7 +145,7 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
 
           {/* Content overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-cyan-300 transition-colors line-clamp-3 mb-2 leading-tight">
+            <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-cyan-300 transition-colors mb-2 leading-tight">
               {article.title}
             </h3>
             {article.excerpt && (
@@ -164,7 +164,7 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
   );
 }
 
-// ─── Medium Card: Image left + text right (horizontal) ──────────────
+// ─── Medium Card: Image with overlay text (vertical) ──────────────
 function NewsMediumCard({ article }: { article: NewsArticle }) {
   const fallback = getFallbackImage(article.category, article.title);
   const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
@@ -179,36 +179,40 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
 
   return (
     <Link href={`/noticias/${article.slug}`} className="group block flex-1">
-      <Card className="overflow-hidden h-full hover:shadow-lg transition-all hover:border-accent/30">
-        <div className="flex h-full">
-          {/* Thumbnail */}
-          <div className="relative w-28 sm:w-32 flex-shrink-0 overflow-hidden bg-surface-secondary">
-            <Image
-              src={imgSrc}
-              alt={article.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="128px"
-              onError={handleImageError}
-              unoptimized={imgError}
-            />
+      <Card className="overflow-hidden h-full hover:shadow-lg transition-all hover:border-accent/30 relative">
+        <div className="relative h-full min-h-[160px] overflow-hidden bg-surface-secondary">
+          <Image
+            src={imgSrc}
+            alt={article.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 1024px) 100vw, 33vw"
+            onError={handleImageError}
+            unoptimized={imgError}
+          />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+          {/* Badges on top */}
+          <div className="absolute top-2 left-2 flex items-center gap-1.5">
+            <Badge variant="accent" size="sm" className="text-2xs py-0 px-1.5 backdrop-blur-sm">
+              {article.category}
+            </Badge>
+            <Badge
+              variant="default"
+              size="sm"
+              className="bg-white/80 dark:bg-slate-900/80 text-text-secondary text-2xs py-0 px-1.5 backdrop-blur-sm"
+            >
+              {article.source}
+            </Badge>
           </div>
-          {/* Content */}
-          <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Badge variant="accent" size="sm" className="text-2xs py-0 px-1.5">
-                  {article.category}
-                </Badge>
-                <span className="text-2xs text-text-muted dark:text-slate-500 truncate">
-                  {article.source}
-                </span>
-              </div>
-              <h3 className="font-semibold text-xs sm:text-sm text-text-primary dark:text-white group-hover:text-accent transition-colors line-clamp-3 leading-snug">
-                {article.title}
-              </h3>
-            </div>
-            <div className="flex items-center gap-1.5 text-2xs text-text-muted mt-2">
+
+          {/* Content overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
+              {article.title}
+            </h3>
+            <div className="flex items-center gap-1.5 text-2xs text-white/60">
               <Clock className="w-2.5 h-2.5" />
               {formatRelativeTime(article.publishedAt)}
             </div>
@@ -219,7 +223,7 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
   );
 }
 
-// ─── Standard Card: Vertical image + text (for 3-column row) ────────
+// ─── Standard Card: Image with overlay text (for 3-column row) ──────
 function NewsStandardCard({ article }: { article: NewsArticle }) {
   const fallback = getFallbackImage(article.category, article.title);
   const [imgSrc, setImgSrc] = useState(getProxyImageUrl(article.imageUrl) || fallback);
@@ -234,9 +238,8 @@ function NewsStandardCard({ article }: { article: NewsArticle }) {
 
   return (
     <Link href={`/noticias/${article.slug}`} className="group block h-full">
-      <Card className="overflow-hidden h-full hover:shadow-lg transition-all hover:border-accent/30">
-        {/* Image */}
-        <div className="relative aspect-[16/9] overflow-hidden bg-surface-secondary">
+      <Card className="overflow-hidden h-full hover:shadow-lg transition-all hover:border-accent/30 relative">
+        <div className="relative aspect-[16/10] overflow-hidden bg-surface-secondary">
           <Image
             src={imgSrc}
             alt={article.title}
@@ -246,25 +249,28 @@ function NewsStandardCard({ article }: { article: NewsArticle }) {
             onError={handleImageError}
             unoptimized={imgError}
           />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
           {/* Category Badge */}
-          <div className="absolute bottom-2 left-2">
-            <Badge variant="accent" size="sm">
+          <div className="absolute top-2 left-2 flex items-center gap-1.5">
+            <Badge variant="accent" size="sm" className="text-2xs backdrop-blur-sm">
               {article.category}
             </Badge>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="p-3">
-          <h3 className="font-semibold text-sm text-text-primary dark:text-white group-hover:text-accent transition-colors line-clamp-2 mb-1.5 leading-snug">
-            {article.title}
-          </h3>
-          <div className="flex items-center justify-between text-2xs text-text-muted">
-            <span className="truncate">{article.source}</span>
-            <span className="flex items-center gap-1 flex-shrink-0 ml-2">
-              <Clock className="w-2.5 h-2.5" />
-              {formatRelativeTime(article.publishedAt)}
-            </span>
+          {/* Content overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
+              {article.title}
+            </h3>
+            <div className="flex items-center justify-between text-2xs text-white/60">
+              <span className="truncate">{article.source}</span>
+              <span className="flex items-center gap-1 flex-shrink-0 ml-2">
+                <Clock className="w-2.5 h-2.5" />
+                {formatRelativeTime(article.publishedAt)}
+              </span>
+            </div>
           </div>
         </div>
       </Card>
@@ -291,7 +297,7 @@ function NewsCompactItem({ article }: { article: NewsArticle }) {
               {formatRelativeTime(article.publishedAt)}
             </span>
           </div>
-          <h4 className="text-xs sm:text-sm font-medium text-text-primary dark:text-white group-hover:text-accent transition-colors line-clamp-2 leading-snug">
+          <h4 className="text-xs sm:text-sm font-medium text-text-primary dark:text-white group-hover:text-accent transition-colors leading-snug">
             {article.title}
           </h4>
         </div>
