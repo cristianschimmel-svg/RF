@@ -59,7 +59,7 @@ export function HeroBanner({ className }: { className?: string }) {
       className
     )}>
       <BannerAd
-        src="/banners/MagicBrain.gif"
+        src="/banners/Magic%20Brain.gif"
         alt="Magic Brain - Entrenamiento Mental"
         href="https://magicbrain.com.ar"
         width={1000}
@@ -90,15 +90,15 @@ export function LeaderboardBanner({ className }: { className?: string }) {
 export function SidebarBanners({ className }: { className?: string }) {
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Cursos Online - Prominent */}
+      {/* Magic Brain - Square */}
       <div className="relative">
         <div className="absolute -inset-1 bg-gradient-to-r from-accent/20 to-accent-dark/20 rounded-xl blur-sm" />
         <BannerAd
-          src="/banners/banner-chico-cursos-online-300x179.gif"
-          alt="Cursos Online - TiendaFinanzas"
-          href="https://tiendafinanzas.com.ar/"
+          src="/banners/Magic%20Brain.gif"
+          alt="Magic Brain - Entrenamiento Mental"
+          href="https://magicbrain.com.ar"
           width={300}
-          height={179}
+          height={300}
           className="relative shadow-lg"
         />
       </div>
