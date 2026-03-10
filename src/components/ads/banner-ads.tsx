@@ -49,22 +49,20 @@ export function BannerAd({
   );
 }
 
-// Hero Banner - Full width top banner (Magic Brain - cropped visually)
+// Hero Banner - Sidebar square banner (Magic Brain)
 export function HeroBanner({ className }: { className?: string }) {
   return (
     <div className={cn(
       'w-full flex justify-center py-1',
-      'bg-surface-primary dark:bg-surface-primary',
-      'border-b border-border-muted',
       className
     )}>
       <BannerAd
         src="/banners/Magic%20Brain.gif"
         alt="Magic Brain - Entrenamiento Mental"
         href="https://magicbrain.com.ar"
-        width={1000}
-        height={150}
-        className="shadow-md max-h-[60px]"
+        width={300}
+        height={300}
+        className="shadow-md rounded-lg"
         priority
       />
     </div>

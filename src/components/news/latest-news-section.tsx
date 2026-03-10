@@ -144,7 +144,7 @@ function NewsHeroCard({ article }: { article: NewsArticle }) {
           </div>
 
           {/* Content overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="absolute bottom-0 left-0 right-0 p-4" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' }}>
             <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-cyan-300 transition-colors mb-2 leading-tight">
               {article.title}
             </h3>
@@ -208,7 +208,7 @@ function NewsMediumCard({ article }: { article: NewsArticle }) {
           </div>
 
           {/* Content overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-3">
+          <div className="absolute bottom-0 left-0 right-0 p-3" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' }}>
             <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
               {article.title}
             </h3>
@@ -260,7 +260,7 @@ function NewsStandardCard({ article }: { article: NewsArticle }) {
           </div>
 
           {/* Content overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-3">
+          <div className="absolute bottom-0 left-0 right-0 p-3" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.5)' }}>
             <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors leading-snug mb-1">
               {article.title}
             </h3>
