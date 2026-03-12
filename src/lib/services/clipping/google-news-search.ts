@@ -59,10 +59,10 @@ interface ClippingQuery {
  * Single-word keywords shorter than 4 chars are skipped (too generic for Google).
  */
 function buildDynamicQueries(keywords: Record<string, string[]>): ClippingQuery[] {
-  // Only search Google News for institucional keywords (direct mentions)
-  // Sector keywords are too broad for Google searches
+  // Search Google News for institucional + sector keywords (both are EXEMPT categories)
   const institucional = keywords.institucional || [];
-  const allKws = [...institucional];
+  const sector = keywords.sector || [];
+  const allKws = [...institucional, ...sector];
 
   // Group accent variants: normalize to base form, collect originals
   const groups = new Map<string, Set<string>>();
@@ -96,6 +96,10 @@ const FALLBACK_QUERIES: ClippingQuery[] = [
   { label: 'Mercado a término', query: '"mercado a término" OR "mercado a termino"' },
   { label: 'rofex', query: '"rofex"' },
   { label: 'matba rofex', query: '"matba rofex"' },
+  { label: 'bolsa comercio rosario', query: '"bolsa de comercio de rosario"' },
+  { label: 'merval', query: '"merval"' },
+  { label: 'MAE mercados', query: '"MAE" mercados argentina' },
+  { label: 'derivados financieros', query: '"derivados financieros" argentina' },
 ];
 
 // ──────────────────────────────────────────────

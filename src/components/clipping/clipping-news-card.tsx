@@ -62,8 +62,19 @@ const SENTIMENT_CONFIG: Record<string, { icon: React.ComponentType<any>; color: 
   very_negative: { icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Muy negativo' },
 };
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '').trim();
+function cleanText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function ClippingNewsCard({ article, isNew, featured }: { article: ClippingArticle; isNew?: boolean; featured?: boolean }) {
@@ -71,7 +82,8 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
   const sentiment = SENTIMENT_CONFIG[article.aiSentiment || 'neutral'] || SENTIMENT_CONFIG.neutral;
   const SentimentIcon = sentiment.icon;
   const previewLen = featured ? 500 : 300;
-  const preview = article.aiSummary ? stripHtml(article.aiSummary).slice(0, previewLen) : stripHtml(article.header).slice(0, previewLen);
+  const preview = article.aiSummary ? cleanText(article.aiSummary).slice(0, previewLen) : cleanText(article.header).slice(0, previewLen);
+  const cleanTitle = cleanText(article.title);
 
   return (
     <div className={`bg-surface-elevated dark:bg-[#111] border rounded-xl ${featured ? 'p-5' : 'p-4'} hover:border-indigo-500/30 transition-all group ${
@@ -111,7 +123,7 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
 
           {/* Title */}
           <h3 className={`${featured ? 'text-base' : 'text-sm'} font-semibold text-text-primary dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors line-clamp-2 mb-1.5`}>
-            {article.title}
+            {cleanTitle}
           </h3>
 
           {/* Preview */}
@@ -131,7 +143,7 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
               </span>
               {article.clippingReason && (
                 <span className="text-2xs text-text-muted dark:text-slate-500 italic line-clamp-1">
-                  {article.clippingReason}
+                  {cleanText(article.clippingReason || '')}
                 </span>
               )}
             </div>
@@ -148,7 +160,7 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
           {article.clippingMatchContext && (
             <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-lg px-3 py-2 mb-2">
               <p className="text-xs text-text-secondary dark:text-slate-300 leading-relaxed line-clamp-4">
-                “{article.clippingMatchContext}”
+                "{cleanText(article.clippingMatchContext || '')}"
               </p>
             </div>
           )}

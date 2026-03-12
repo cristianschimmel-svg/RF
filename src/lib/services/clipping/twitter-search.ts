@@ -49,10 +49,10 @@ export interface TwitterSearchOptions {
 // ──────────────────────────────────────────────
 
 const NITTER_INSTANCES = [
-  'https://nitter.privacydev.net',
+  'https://xcancel.com',
   'https://nitter.poast.org',
-  'https://nitter.woodland.cafe',
-  'https://nitter.1d4.us',
+  'https://nitter.catsarch.com',
+  'https://nitter.privacyredirect.com',
 ];
 
 // ──────────────────────────────────────────────
