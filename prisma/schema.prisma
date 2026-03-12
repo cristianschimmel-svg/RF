@@ -199,11 +199,17 @@ model ProcessedNewsArticle {
   isProcessed      Boolean  @default(false)
   processingError  String?
   isDeleted        Boolean  @default(false)
+  isClipping       Boolean  @default(false)
+  clippingCategory     String?  // institucional, producto, sector, ecosistema
+  clippingScore        Int?     // AI relevance score 0-10
+  clippingReason       String?  // AI explanation of why it's relevant
+  clippingMatchContext String?  // Paragraph where the matched keyword was found
 
   @@index([category])
   @@index([publishedAt])
   @@index([isProcessed])
   @@index([isDeleted])
+  @@index([isClipping])
   @@map("processed_news_articles")
 }
 
@@ -213,4 +219,38 @@ model ProcessedNewsStore {
   lastUpdated DateTime @default(now())
 
   @@map("processed_news_store")
+}
+
+// ============================================
+// CLIPPING USERS (separate auth for clipping service)
+// ============================================
+
+model ClippingUser {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  name            String?
+  company         String    @default("A3 Mercados")
+  active          Boolean   @default(true)
+  lastLogin       DateTime?
+  customKeywords  Json?     // string[] of extra user keywords
+  enabledSources  Json?     // string[] of source names to show (null = all)
+  customSources   Json?     // {name: string, feedUrl: string}[] custom RSS feeds
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("clipping_users")
+}
+
+// ============================================
+// CLIPPING KEYWORD CONFIG (dynamic keyword management)
+// ============================================
+
+model ClippingKeywordConfig {
+  id        String   @id @default("singleton")
+  keywords  Json     // Record<string, string[]> — category → keyword list
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("clipping_keyword_config")
 }

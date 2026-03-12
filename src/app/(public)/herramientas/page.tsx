@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Building2,
   ChevronRight,
+  Scissors,
 } from 'lucide-react';
 
 export const metadata = {
@@ -73,6 +74,15 @@ const tools = [
     color: 'from-orange-500 to-orange-600',
     href: '/indicadores/cripto',
     badge: 'Disponible',
+    available: true,
+  },
+  {
+    title: 'A3 Clipping',
+    description: 'Monitoreo de prensa para A3 Mercados: noticias clasificadas sobre futuros, derivados y el ecosistema financiero.',
+    icon: Scissors,
+    color: 'from-indigo-500 to-indigo-600',
+    href: '/herramientas/a3-clipping',
+    badge: 'Nuevo',
     available: true,
   },
   {

@@ -4,11 +4,25 @@
     {
       "path": "/api/cron/process-news",
       "schedule": "*/30 9-22 * * *"
+    },
+    {
+      "path": "/api/cron/google-news",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/twitter-search",
+      "schedule": "30 */3 * * *"
     }
   ],
   "functions": {
     "src/app/api/cron/process-news/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/cron/google-news/route.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/cron/twitter-search/route.ts": {
+      "maxDuration": 120
     },
     "src/app/api/news/processed/route.ts": {
       "maxDuration": 60

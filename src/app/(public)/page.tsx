@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { MainLayout } from '@/components/layout';
 import { ImagePrefetcher } from '@/components/layout/image-prefetcher';
 import { MiniDollarCard, MiniIndicator, IndicatorSection } from '@/components/indicators/mini-indicator';
+import { MarketBar } from '@/components/indicators/market-bar';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge, VariationBadge } from '@/components/ui/badge';
@@ -47,6 +48,15 @@ export default async function HomePage() {
   return (
     <MainLayout>
       <ImagePrefetcher articles={[...editorialNews, ...externalNews]} />
+      <MarketBar
+        initialData={{
+          dollarQuotes: overview.dollarQuotes,
+          dollarMetrics: overview.dollarMetrics,
+          riesgoPais,
+          mervalIndex: marketSummary?.indices?.[0] ?? null,
+          lastUpdated: overview.lastUpdated,
+        }}
+      />
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         {/* Header - Responsive */}
         <header className="mb-3 sm:mb-4">

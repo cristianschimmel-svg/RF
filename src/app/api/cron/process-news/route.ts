@@ -5,10 +5,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { processAllNews } from '@/lib/services/news-processor';
+import { processAllNews, processClippingCustomSources } from '@/lib/services/news-processor';
+import { getKeywordsFromDB } from '@/lib/services/clipping/a3-keywords';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // seconds (Vercel Pro allows up to 300)
+export const maxDuration = 120; // seconds — increased for Google News search
 
 export async function GET(request: NextRequest) {
   // Verify the request is from Vercel Cron (or allow in development)
@@ -42,12 +43,32 @@ export async function GET(request: NextRequest) {
   try {
     const result = await processAllNews();
 
-    console.log(`[Cron] Completed: ${result.processedCount} articles in ${result.duration}ms`);
+    // Process custom clipping sources separately (does NOT affect the portal)
+    let clippingResult = { processed: 0, errors: 0 };
+    try {
+      const dynamicKeywords = await getKeywordsFromDB();
+      clippingResult = await processClippingCustomSources(dynamicKeywords);
+    } catch (e) {
+      console.error('[Cron] Clipping custom sources error:', e instanceof Error ? e.message : e);
+    }
+
+    // Google News search for A3 clipping institutional keywords
+    let googleResult = { totalFound: 0, newArticles: 0, duplicatesSkipped: 0, errors: 0, duration: 0 };
+    try {
+      const { processGoogleNewsSearch } = await import('@/lib/services/clipping/google-news-search');
+      googleResult = await processGoogleNewsSearch();
+    } catch (e) {
+      console.error('[Cron] Google News search error:', e instanceof Error ? e.message : e);
+    }
+
+    console.log(`[Cron] Completed: ${result.processedCount} articles in ${result.duration}ms, clipping custom: ${clippingResult.processed}, google news: ${googleResult.newArticles} new`);
 
     return NextResponse.json({
       success: true,
       message: `Processed ${result.processedCount} articles in ${result.duration}ms`,
       result,
+      clippingCustom: clippingResult,
+      googleNews: googleResult,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

@@ -205,11 +205,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col bg-bg-primary dark:bg-black">
       {/* Header + Ticker en bloque sticky */}
       <div className="sticky top-0 z-50">
-        <Header />
-        {/* Ticker Global */}
+        {/* Ticker Global — arriba de todo */}
         <div className="bg-slate-900 border-b border-slate-700">
           <GlobalTicker />
         </div>
+        <Header />
         {/* Acortacaminos Rápidos */}
         <div className="bg-surface border-b border-border shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center gap-3 text-2xs sm:text-xs font-semibold uppercase tracking-wider overflow-x-auto scrollbar-hide">

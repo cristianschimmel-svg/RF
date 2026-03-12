@@ -22,6 +22,8 @@ import {
   getStoreInfo,
   areTitlesSimilar
 } from './json-store';
+import { classifyForClipping, getKeywordsFromDB, type ClippingCategory } from '../clipping/a3-keywords';
+import { validateClippingRelevance } from '../clipping/relevance-validator';
 import type { ProcessedNews, ProcessingResult } from './types';
 import type { ScrapedArticle } from '../scrapers/types';
 
@@ -218,17 +220,36 @@ const RELEVANCE_KEYWORDS = {
 
 /**
  * Check if an article is relevant to a finance/economy portal.
- * THREE-STEP FILTER:
+ * FOUR-STEP FILTER:
+ * 0. BYPASS: If article matches institucional clipping keywords → always include
  * 1. Reject if contains exclusion keywords
  * 2. Reject if too old (>72h / 3 days)
  * 3. REQUIRE at least one finance keyword (no exceptions)
  */
-export function isArticleRelevant(article: ScrapedArticle): boolean {
+export function isArticleRelevant(
+  article: ScrapedArticle,
+  institucionalKeywords?: string[],
+): boolean {
   const text = `${article.title} ${article.excerpt}`.toLowerCase();
+  const urlLower = article.url.toLowerCase();
+  
+  // STEP 0: Institucional clipping keywords BYPASS all filters
+  // These are the most important — direct mentions of A3 Mercados, its brands, and user-added terms
+  if (institucionalKeywords && institucionalKeywords.length > 0) {
+    const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalizedUrl = urlLower.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (const kw of institucionalKeywords) {
+      const normalizedKw = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (normalizedText.includes(normalizedKw) || normalizedUrl.includes(normalizedKw)) {
+        console.log(`[NewsProcessor] 🏛️ INSTITUCIONAL BYPASS: "${article.title.slice(0, 50)}..." (kw: ${kw})`);
+        return true;
+      }
+    }
+  }
   
   // STEP 1: Hard exclude — always reject these topics
   for (const keyword of EXCLUSION_KEYWORDS) {
-    if (text.includes(keyword) || article.url.toLowerCase().includes(keyword)) {
+    if (text.includes(keyword) || urlLower.includes(keyword)) {
       console.log(`[NewsProcessor] ❌ Excluded: "${article.title.slice(0, 50)}..." (keyword: ${keyword})`);
       return false;
     }
@@ -345,7 +366,10 @@ function balanceByCategory(articles: ScrapedArticle[], maxPerCategory: number): 
 /**
  * Process a single article: scrape content + generate AI summary
  */
-async function processArticle(article: ScrapedArticle): Promise<ProcessedNews> {
+async function processArticle(
+  article: ScrapedArticle,
+  dynamicKeywords?: Record<ClippingCategory, string[]>,
+): Promise<ProcessedNews> {
   const startTime = Date.now();
   console.log(`[NewsProcessor] Processing: ${article.title.slice(0, 50)}...`);
 
@@ -477,6 +501,46 @@ async function processArticle(article: ScrapedArticle): Promise<ProcessedNews> {
     console.error(`[NewsProcessor] ❌ Error processing article:`, errorMsg);
   }
 
+  // Clipping classification (runs regardless of AI success/failure)
+  // Also check full article content — keywords in body matter too
+  const clipping = classifyForClipping(processed.title, processed.header, processed.originalContent, dynamicKeywords);
+  if (clipping.isClipping && clipping.category) {
+    if (clipping.exempt) {
+      // Exempt keywords (institucional, sector) → auto-include with max score
+      processed.isClipping = true;
+      processed.clippingCategory = clipping.category;
+      (processed as any).clippingScore = 10;
+      (processed as any).clippingReason = `Mención directa: "${clipping.matchedKeyword}"`;
+      console.log(`[NewsProcessor] 📋 A3 Clipping [${clipping.category}] EXEMPT: "${processed.title.slice(0, 50)}..." (kw: ${clipping.matchedKeyword})`);
+    } else {
+      // Candidate keywords → validate with AI
+      try {
+        const relevance = await validateClippingRelevance(
+          processed.title,
+          processed.header || processed.aiSummary || '',
+          clipping.matchedKeyword || '',
+          clipping.category,
+        );
+        if (relevance.score >= 5) {
+          processed.isClipping = true;
+          processed.clippingCategory = relevance.category || clipping.category;
+          (processed as any).clippingScore = relevance.score;
+          (processed as any).clippingReason = relevance.reason;
+          console.log(`[NewsProcessor] 📋 A3 Clipping [${relevance.category}] score=${relevance.score}: "${processed.title.slice(0, 50)}..." — ${relevance.reason}`);
+        } else {
+          console.log(`[NewsProcessor] 🚫 A3 Clipping REJECTED score=${relevance.score}: "${processed.title.slice(0, 50)}..." — ${relevance.reason}`);
+        }
+      } catch (err) {
+        // On AI error, include conservatively
+        processed.isClipping = true;
+        processed.clippingCategory = clipping.category;
+        (processed as any).clippingScore = 6;
+        (processed as any).clippingReason = 'Incluido por error en validación IA';
+        console.log(`[NewsProcessor] 📋 A3 Clipping [${clipping.category}] AI-ERROR-FALLBACK: "${processed.title.slice(0, 50)}..."`);
+      }
+    }
+  }
+
   return processed;
 }
 
@@ -486,6 +550,9 @@ async function processArticle(article: ScrapedArticle): Promise<ProcessedNews> {
 export async function processAllNews(): Promise<ProcessingResult> {
   const startTime = Date.now();
   console.log('[NewsProcessor] Starting news processing...');
+
+  // Load dynamic keywords from DB (or defaults)
+  const dynamicKeywords = await getKeywordsFromDB();
 
   const result: ProcessingResult = {
     success: false,
@@ -503,7 +570,12 @@ export async function processAllNews(): Promise<ProcessingResult> {
     console.log(`[NewsProcessor] Found ${scrapedArticles.length} articles from RSS`);
 
     // Step 2: Filter by relevance (categories + keywords for Rosario/Argentina finance)
-    const relevantArticles = scrapedArticles.filter(isArticleRelevant);
+    // Institucional keywords bypass ALL filters (exclusion, geo, finance check)
+    const institucionalKws = [
+      ...(dynamicKeywords.institucional || []),
+      ...(dynamicKeywords.sector || []),
+    ];
+    const relevantArticles = scrapedArticles.filter(a => isArticleRelevant(a, institucionalKws));
     console.log(`[NewsProcessor] ${relevantArticles.length} relevant articles (finance/economy/agro/Rosario)`);
 
     // Step 2.5: Balance categories — cap each category to avoid one dominating
@@ -551,7 +623,7 @@ export async function processAllNews(): Promise<ProcessingResult> {
       console.log(`[NewsProcessor] Processing batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(articlesToProcess.length / CONFIG.batchSize)}`);
 
       const batchResults = await Promise.all(
-        batch.map(article => processArticle(article))
+        batch.map(article => processArticle(article, dynamicKeywords))
       );
 
       for (const processed of batchResults) {
@@ -626,4 +698,140 @@ export async function forceReprocess(): Promise<ProcessingResult> {
   const { clearStore } = await import('./json-store');
   await clearStore();
   return await processAllNews();
+}
+
+/**
+ * Process custom clipping sources (separate from main portal pipeline).
+ * Fetches RSS feeds defined by clipping users, classifies them,
+ * and writes them directly to DB tagged as clipping.
+ * Does NOT go through the main portal relevance filter.
+ */
+export async function processClippingCustomSources(
+  dynamicKeywords?: Record<ClippingCategory, string[]>,
+): Promise<{ processed: number; errors: number }> {
+  const customSources = await scraperManager.getClippingCustomSources();
+  if (customSources.length === 0) return { processed: 0, errors: 0 };
+
+  console.log(`[ClippingCustom] Processing ${customSources.length} custom sources...`);
+
+  // Build ad-hoc scrapers and fetch
+  const { RSSScraper } = await import('../scrapers/rss-scraper');
+  const scrapers = customSources.map(src => {
+    const id = src.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    return {
+      name: src.name,
+      scraper: new RSSScraper({
+        source: {
+          id: `custom-${id}`,
+          name: src.name,
+          baseUrl: (() => { try { return new URL(src.feedUrl).origin; } catch { return src.feedUrl; } })(),
+          category: 'economia',
+          enabled: true,
+        },
+        feedUrl: src.feedUrl,
+        category: 'Clipping Custom',
+        priority: 6,
+      }),
+    };
+  });
+
+  const allArticles: ScrapedArticle[] = [];
+  const results = await Promise.allSettled(scrapers.map(s => s.scraper.scrape()));
+
+  results.forEach((res, i) => {
+    const name = scrapers[i].name;
+    if (res.status === 'fulfilled' && res.value.success) {
+      allArticles.push(...res.value.articles);
+      console.log(`[ClippingCustom] ${name}: ${res.value.articles.length} articles`);
+    } else {
+      console.error(`[ClippingCustom] ${name}: failed`, res.status === 'rejected' ? res.reason : 'no articles');
+    }
+  });
+
+  if (allArticles.length === 0) return { processed: 0, errors: 0 };
+
+  const { prisma } = await import('@/lib/db/prisma');
+  let processed = 0;
+  let errors = 0;
+
+  for (const article of allArticles) {
+    try {
+      // Check if already exists
+      const exists = await prisma.processedNewsArticle.findUnique({ where: { id: article.id } });
+      if (exists) continue;
+
+      // Scrape full content for better classification
+      let fullContent = '';
+      try {
+        const scraped = await scrapeArticleContent(article.url);
+        if (scraped.success) fullContent = scraped.content;
+      } catch { /* content scraping is best-effort */ }
+
+      // Classify for clipping (title + excerpt + full content)
+      const clipping = classifyForClipping(article.title, article.excerpt, fullContent, dynamicKeywords);
+
+      // For candidates that aren't exempt, validate with AI
+      let shouldInclude = true;
+      let finalCategory = clipping.category ?? 'ecosistema';
+      let clippingScore: number | null = null;
+      let clippingReason: string | null = null;
+
+      if (clipping.isClipping && clipping.exempt) {
+        clippingScore = 10;
+        clippingReason = `Mención directa: "${clipping.matchedKeyword}"`;
+      } else if (clipping.isClipping && !clipping.exempt) {
+        try {
+          const relevance = await validateClippingRelevance(
+            article.title,
+            article.excerpt,
+            clipping.matchedKeyword || '',
+            finalCategory,
+          );
+          if (relevance.score >= 5) {
+            finalCategory = (relevance.category || finalCategory) as typeof finalCategory;
+            clippingScore = relevance.score;
+            clippingReason = relevance.reason;
+          } else {
+            shouldInclude = false;
+            console.log(`[ClippingCustom] 🚫 REJECTED score=${relevance.score}: "${article.title.slice(0, 50)}..." — ${relevance.reason}`);
+          }
+        } catch {
+          clippingScore = 6;
+          clippingReason = 'Incluido por error en validación IA';
+        }
+      }
+
+      if (!shouldInclude) continue;
+
+      await prisma.processedNewsArticle.create({
+        data: {
+          id: article.id,
+          title: article.title,
+          header: article.excerpt,
+          originalContent: fullContent,
+          aiSummary: article.excerpt,
+          sourceUrl: article.url,
+          sourceName: article.source.name,
+          sourceId: article.source.id,
+          sourceImageUrl: article.imageUrl || null,
+          category: article.category,
+          priority: article.priority || 6,
+          publishedAt: article.publishedAt,
+          processedAt: new Date(),
+          isProcessed: true,
+          isDeleted: false,
+          isClipping: true,
+          clippingCategory: finalCategory,
+          clippingScore,
+          clippingReason,
+        },
+      });
+      processed++;
+    } catch (err) {
+      errors++;
+    }
+  }
+
+  console.log(`[ClippingCustom] Done: ${processed} new articles, ${errors} errors`);
+  return { processed, errors };
 }

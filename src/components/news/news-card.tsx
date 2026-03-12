@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { formatRelativeTime, formatDate, getProxyImageUrl } from '@/lib/utils';
 import { Clock, User, ChevronRight } from 'lucide-react';
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
+
 interface NewsCardProps {
   title: string;
   excerpt: string;
@@ -59,7 +61,7 @@ export function NewsCard({
             {title}
           </h3>
           <p className="text-sm text-text-secondary line-clamp-2 mb-3">
-            {excerpt}
+            {stripHtml(excerpt)}
           </p>
           <div className="flex items-center gap-3 text-xs text-text-muted">
             <span className="flex items-center gap-1">
@@ -119,7 +121,7 @@ export function NewsFeatured({
               {title}
             </h2>
             <p className="text-text-secondary line-clamp-3 mb-4">
-              {excerpt}
+              {stripHtml(excerpt)}
             </p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -217,7 +219,7 @@ export function NewsCardHorizontal({
               {title}
             </h3>
             <p className="text-sm text-text-secondary line-clamp-2 hidden md:block">
-              {excerpt}
+              {stripHtml(excerpt)}
             </p>
           </div>
         </div>

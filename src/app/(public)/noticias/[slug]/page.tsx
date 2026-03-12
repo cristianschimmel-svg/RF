@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
 import { ArticleHeroImage } from '@/components/news/article-hero-image';
 import { TrackRecentArticle } from '@/components/news/track-recent-article';
 import { getNewsArticle, getExternalNews } from '@/lib/services/unified-news-service';
@@ -64,7 +66,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   const title = metaTitle || article.title;
-  const description = metaDescription || article.excerpt || article.aiSummary;
+  const description = metaDescription || (article.excerpt ? stripHtml(article.excerpt) : null) || article.aiSummary;
   const image = ogImage || article.imageUrl;
 
   return {
@@ -154,7 +156,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
               {article.excerpt && (
                 <p className="text-lg text-text-secondary mb-6">
-                  {article.excerpt}
+                  {stripHtml(article.excerpt)}
                 </p>
               )}
 

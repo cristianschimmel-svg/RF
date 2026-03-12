@@ -187,7 +187,7 @@ async function fetchExternalArticles(): Promise<NewsArticle[]> {
     // Also exclude articles that were soft-deleted by admin
     const filteredArticles = scrapedArticles
       .filter(a => !deletedUrls.has(a.url))
-      .filter(isArticleRelevant);
+      .filter(a => isArticleRelevant(a));
     console.log(`[NewsService] Live RSS: ${scrapedArticles.length} raw → ${filteredArticles.length} after relevance + deletion filter`);
     
     if (filteredArticles.length > 0) {

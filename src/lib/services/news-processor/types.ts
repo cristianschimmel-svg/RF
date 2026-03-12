@@ -29,6 +29,9 @@ export interface ProcessedNews {
   // Status
   isProcessed: boolean;
   processingError?: string;
+  // Clipping (A3 Mercados)
+  isClipping?: boolean;
+  clippingCategory?: string;
 }
 
 export interface NewsStore {

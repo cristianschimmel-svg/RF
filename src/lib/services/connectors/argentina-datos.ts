@@ -147,7 +147,7 @@ export async function fetchInflacionInteranual(): Promise<Indicator | null> {
   }
 }
 
-// Fetch Riesgo País
+// Fetch Riesgo País (con variación diaria usando datos históricos)
 export async function fetchRiesgoPais(): Promise<Indicator | null> {
   const cacheKey = 'argentinadatos:riesgo-pais';
   const cached = cache.get<Indicator>(cacheKey);
@@ -157,9 +157,47 @@ export async function fetchRiesgoPais(): Promise<Indicator | null> {
   }
 
   try {
-    // Intentamos primero el endpoint "ultimo" que es más rápido
+    // Fetch últimos registros del histórico para calcular variación real
+    const histUrl = `${API_CONFIG.argentinaDatos.baseUrl}${API_CONFIG.argentinaDatos.endpoints.riesgoPais}`;
+    const histResponse = await fetch(histUrl, {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 300 },
+    });
+
+    if (histResponse.ok) {
+      const histData: ArgentinaDatosRiesgoPais[] = await histResponse.json();
+
+      if (Array.isArray(histData) && histData.length >= 2) {
+        const current = histData[histData.length - 1];
+        const previous = histData[histData.length - 2];
+        const change = current.valor - previous.valor;
+        const changePercent = previous.valor !== 0 ? (change / previous.valor) * 100 : 0;
+
+        const indicator: Indicator = {
+          id: 'argentinadatos-riesgo-pais',
+          name: 'Riesgo País',
+          shortName: 'EMBI+',
+          category: 'riesgo',
+          value: current.valor,
+          previousValue: previous.valor,
+          change,
+          changePercent,
+          unit: 'pb',
+          format: 'number',
+          decimals: 0,
+          source: 'ArgentinaDatos (JP Morgan)',
+          lastUpdated: current.fecha,
+          frequency: 'daily',
+          isFallback: false,
+        };
+
+        cache.set(cacheKey, indicator, API_CONFIG.argentinaDatos.cacheTTL);
+        return indicator;
+      }
+    }
+
+    // Fallback al endpoint "ultimo" si el histórico falla
     const url = `${API_CONFIG.argentinaDatos.baseUrl}${API_CONFIG.argentinaDatos.endpoints.riesgoPaisUltimo}`;
-    
     const response = await fetch(url, {
       headers: { 'Accept': 'application/json' },
       next: { revalidate: 300 },
@@ -181,7 +219,7 @@ export async function fetchRiesgoPais(): Promise<Indicator | null> {
       shortName: 'EMBI+',
       category: 'riesgo',
       value: data.valor,
-      previousValue: data.valor, // No tenemos el anterior en este endpoint
+      previousValue: data.valor,
       change: 0,
       changePercent: 0,
       unit: 'pb',

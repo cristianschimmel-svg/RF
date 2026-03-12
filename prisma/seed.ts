@@ -349,9 +349,24 @@ Los bonos en pesos reaccionaron con subas moderadas, mientras que el dólar se m
   });
   console.log('⚙️ Created settings');
 
+  // Create A3 Clipping user
+  const clippingPassword = await bcrypt.hash('A3clipping2024!', 12);
+  await prisma.clippingUser.upsert({
+    where: { email: 'clipping@a3mercados.com.ar' },
+    update: {},
+    create: {
+      email: 'clipping@a3mercados.com.ar',
+      password: clippingPassword,
+      name: 'A3 Mercados',
+      company: 'A3 Mercados',
+    },
+  });
+  console.log('📋 Created A3 Clipping user: clipping@a3mercados.com.ar');
+
   console.log('✅ Seed completed successfully!');
   console.log('\n📋 Summary:');
   console.log(`   - Admin user: admin@rosariofinanzas.com.ar / WenCri123$`);
+  console.log(`   - Clipping user: clipping@a3mercados.com.ar / A3clipping2024!`);
   console.log(`   - Categories: ${categories.length}`);
   console.log(`   - Tags: ${tags.length}`);
   console.log(`   - Articles: ${articles.length}`);

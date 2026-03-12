@@ -9,6 +9,7 @@ interface ArticleInput {
   source: string;
   slug: string;
   category: string;
+  isExternal?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -36,8 +37,10 @@ export async function POST(req: NextRequest) {
 
     const articlesList = limitedArticles
       .map(
-        (a, i) =>
-          `${i + 1}. [${a.title}] — Fuente: ${a.source} — Categoría: ${a.category}\n   Resumen: ${a.excerpt}\n   Link: /noticias/${a.slug}`
+        (a, i) => {
+          const link = a.isExternal ? a.slug : `/noticias/${a.slug}`;
+          return `${i + 1}. [${a.title}] — Fuente: ${a.source} — Categoría: ${a.category}\n   Resumen: ${a.excerpt}\n   Link: ${link}`;
+        }
       )
       .join('\n\n');
 
@@ -54,7 +57,7 @@ ${articlesList}
 1. Escribí un resumen ejecutivo de 2-3 párrafos que sintetice la temática general y los puntos más relevantes.
 2. Identificá las tendencias o patrones comunes entre las noticias.
 3. Destacá los datos más importantes para un inversor o empresario.
-4. Al mencionar cada noticia, incluí el link en formato markdown: [título corto](/noticias/slug)
+4. Al mencionar cada noticia, incluí el link EXACTO proporcionado en formato markdown: [título corto](link). NO modifiques los links.
 5. Agregá una sección "📌 Puntos clave" con 3-5 bullets.
 6. Cerrá con una breve perspectiva o conclusión.
 

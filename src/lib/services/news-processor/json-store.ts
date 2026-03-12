@@ -34,6 +34,8 @@ function articleToProcessed(row: any): ProcessedNews {
     processedAt: row.processedAt instanceof Date ? row.processedAt.toISOString() : row.processedAt,
     isProcessed: row.isProcessed,
     processingError: row.processingError ?? undefined,
+    isClipping: row.isClipping ?? false,
+    clippingCategory: row.clippingCategory ?? undefined,
   };
 }
 
@@ -270,6 +272,8 @@ export async function upsertArticles(
           processedAt: new Date(a.processedAt),
           isProcessed: a.isProcessed,
           processingError: a.processingError ?? null,
+          isClipping: a.isClipping ?? false,
+          clippingCategory: a.clippingCategory ?? null,
         },
         create: {
           id: a.id,
@@ -291,6 +295,8 @@ export async function upsertArticles(
           processedAt: new Date(a.processedAt),
           isProcessed: a.isProcessed,
           processingError: a.processingError ?? null,
+          isClipping: a.isClipping ?? false,
+          clippingCategory: a.clippingCategory ?? null,
         },
       });
     }
@@ -400,6 +406,26 @@ export async function purgeOldArticles(maxAgeHours: number = 72): Promise<number
     console.log(`[DBStore] Purged ${result.count} articles older than ${maxAgeHours}h`);
   }
   return result.count;
+}
+
+export async function getClippingArticles(category?: string): Promise<ProcessedNews[]> {
+  const where: any = {
+    isClipping: true,
+    isDeleted: false,
+    isProcessed: true,
+    OR: [
+      { processingError: null },
+      { processingError: { not: { startsWith: 'AI Rejected' } } },
+    ],
+  };
+  if (category) {
+    where.clippingCategory = { equals: category, mode: 'insensitive' };
+  }
+  const rows = await prisma.processedNewsArticle.findMany({
+    where,
+    orderBy: { publishedAt: 'desc' },
+  });
+  return rows.map(articleToProcessed);
 }
 
 export async function clearStore(): Promise<void> {

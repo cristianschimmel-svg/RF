@@ -75,12 +75,13 @@ ${contentToAnalyze}
 3. Genera un resumen CONCISO pero completo de esta noticia. NO repitas textualmente el título ni la bajada. El lector debe entender la noticia sin necesidad de ir a la fuente original.
 4. Extrae los puntos clave.
 5. DATO CLAVE OBLIGATORIO: Si la noticia gira en torno a un dato numérico concreto (cotización, precio, porcentaje de inflación, índice, monto, tasa), DEBÉS extraer la cifra exacta e incluirla de forma prominente en el "summary" (resaltada con <strong>), en el "cleanExcerpt" y como primer item de "keyPoints". Ejemplos: si el título dice "a cuánto cotiza el dólar blue", el resumen DEBE incluir el valor exacto (ej: $1.250); si dice "se conoce la inflación de febrero", DEBE incluir el porcentaje (ej: 3,2%); si dice "a cuánto cotiza el girasol", DEBE incluir el precio.
+6. IMPORTANTE: "cleanExcerpt" y "keyPoints" deben ser TEXTO PLANO, sin etiquetas HTML. Solo "summary" puede usar HTML (<p>, <strong>, <em>).
 
 ## FORMATO DE RESPUESTA (JSON estricto):
 
 {
   "cleanTitle": "Título corregido y completo",
-  "cleanExcerpt": "Bajada limpia y completa, sin puntos suspensivos al final",
+  "cleanExcerpt": "Bajada limpia y completa, sin puntos suspensivos al final. TEXTO PLANO, sin HTML.",
   "summary": "<p>Párrafo principal con los hechos clave: <strong>qué pasó</strong>, cuándo, dónde y quiénes están involucrados. Incluí cifras y datos concretos si los hay.</p><p>Párrafo opcional de contexto o implicancias (solo si es relevante y aporta valor).</p>",
   "keyPoints": [
     "Dato o cifra clave mencionada",
@@ -94,7 +95,7 @@ ${contentToAnalyze}
 }
 
 ## REGLAS IMPORTANTES:
-1. El summary debe usar HTML simple: <p>, <strong>, <em> para enriquecer el texto
+1. El summary debe usar HTML simple: <p>, <strong>, <em> para enriquecer el texto. cleanExcerpt y keyPoints deben ser texto plano SIN etiquetas HTML.
 2. Máximo 2 párrafos (usa 1 si es suficiente para explicar la noticia)
 3. Entre 60 y 120 palabras en total - sé conciso pero informativo
 4. Los keyPoints deben ser concisos (máximo 12 palabras cada uno)
@@ -195,11 +196,14 @@ Responde SOLO con el JSON, sin markdown ni texto adicional.`;
       const validSentiments = ['very_positive', 'positive', 'neutral', 'negative', 'very_negative'] as const;
       const sentiment = validSentiments.includes(parsed.sentiment) ? parsed.sentiment : undefined;
 
+      // Strip HTML tags from fields that must be plain text
+      const stripHtml = (text: string) => text.replace(/<[^>]*>/g, '').trim();
+
       return {
-        cleanTitle: parsed.cleanTitle,
-        cleanExcerpt: parsed.cleanExcerpt,
+        cleanTitle: parsed.cleanTitle ? stripHtml(parsed.cleanTitle) : undefined,
+        cleanExcerpt: parsed.cleanExcerpt ? stripHtml(parsed.cleanExcerpt) : undefined,
         summary,
-        keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+        keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints.map((p: string) => typeof p === 'string' ? stripHtml(p) : p) : [],
         sentiment,
         relevance: typeof parsed.relevance === 'string' ? parsed.relevance : undefined,
         success: true,

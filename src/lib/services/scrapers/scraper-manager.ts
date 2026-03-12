@@ -10,6 +10,11 @@ import type { ScrapedArticle, ScrapeResult } from './types';
 const CACHE_KEY = 'scraped:news:all';
 const CACHE_TTL = 15 * 60; // 15 minutes
 
+interface CustomSourceDef {
+  name: string;
+  feedUrl: string;
+}
+
 class ScraperManager {
   private scrapers: RSSScraper[];
 
@@ -19,7 +24,61 @@ class ScraperManager {
       .map(feed => new RSSScraper(feed));
   }
 
-  async fetchAllNews(): Promise<ScrapedArticle[]> {
+  /**
+   * Build ad-hoc RSSScraper instances from custom clipping user sources
+   */
+  private buildCustomScrapers(customSources: CustomSourceDef[]): RSSScraper[] {
+    return customSources.map(src => {
+      const id = src.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      return new RSSScraper({
+        source: {
+          id: `custom-${id}`,
+          name: src.name,
+          baseUrl: new URL(src.feedUrl).origin,
+          category: 'economia',
+          enabled: true,
+        },
+        feedUrl: src.feedUrl,
+        category: 'Clipping Custom',
+        priority: 6,
+      });
+    });
+  }
+
+  /**
+   * Load custom sources from all active clipping users
+   */
+  async getClippingCustomSources(): Promise<CustomSourceDef[]> {
+    try {
+      const { prisma } = await import('@/lib/db/prisma');
+      const { Prisma } = await import('@prisma/client');
+      const users = await prisma.clippingUser.findMany({
+        where: { active: true, customSources: { not: Prisma.JsonNull } },
+        select: { customSources: true },
+      });
+
+      const allSources: CustomSourceDef[] = [];
+      const seenUrls = new Set<string>();
+
+      for (const u of users) {
+        const sources = u.customSources as CustomSourceDef[] | null;
+        if (!sources) continue;
+        for (const s of sources) {
+          if (s.feedUrl && !seenUrls.has(s.feedUrl)) {
+            seenUrls.add(s.feedUrl);
+            allSources.push(s);
+          }
+        }
+      }
+
+      return allSources;
+    } catch (err) {
+      console.error('[ScraperManager] Failed to load custom clipping sources:', err);
+      return [];
+    }
+  }
+
+  async fetchAllNews(includeClippingCustom = false): Promise<ScrapedArticle[]> {
     // Check cache first
     const cached = cache.get<ScrapedArticle[]>(CACHE_KEY);
     if (cached) {
@@ -29,23 +88,38 @@ class ScraperManager {
 
     console.log('[ScraperManager] Fetching fresh news from sources...');
 
+    // Build scraper list: standard feeds + optionally custom clipping feeds
+    let allScrapers = [...this.scrapers];
+    let customSourceNames: string[] = [];
+
+    if (includeClippingCustom) {
+      const customSources = await this.getClippingCustomSources();
+      if (customSources.length > 0) {
+        const customScrapers = this.buildCustomScrapers(customSources);
+        allScrapers = [...allScrapers, ...customScrapers];
+        customSourceNames = customSources.map(s => s.name);
+        console.log(`[ScraperManager] Including ${customSources.length} custom clipping sources: ${customSourceNames.join(', ')}`);
+      }
+    }
+
     // Fetch from all scrapers in parallel
     const results = await Promise.allSettled(
-      this.scrapers.map(scraper => scraper.scrape())
+      allScrapers.map(scraper => scraper.scrape())
     );
 
     // Collect all successful articles
     const allArticles: ScrapedArticle[] = [];
 
     results.forEach((result, index) => {
-      const feed = RSS_FEEDS[index];
+      const feedName = index < this.scrapers.length
+        ? RSS_FEEDS[index]?.source.name || 'Unknown'
+        : customSourceNames[index - this.scrapers.length] || 'Custom';
+
       if (result.status === 'fulfilled' && result.value.success) {
         allArticles.push(...result.value.articles);
-        console.log(`[ScraperManager] ${feed?.source.name || 'Unknown'}: ${result.value.articles.length} articles`);
+        console.log(`[ScraperManager] ${feedName}: ${result.value.articles.length} articles`);
       } else if (result.status === 'rejected') {
-        console.error(`[ScraperManager] Failed to scrape ${feed?.source.name || 'Unknown'}:`, result.reason);
-      } else if (result.status === 'fulfilled' && !result.value.success) {
-        // Silent fail for feeds that return errors
+        console.error(`[ScraperManager] Failed to scrape ${feedName}:`, result.reason);
       }
     });
 
