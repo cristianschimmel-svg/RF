@@ -33,9 +33,35 @@ export async function register() {
       }
     };
 
+    // Ensure default clipping user exists
+    const seedClippingUser = async () => {
+      try {
+        const { prisma } = await import('@/lib/db/prisma');
+        const existing = await prisma.clippingUser.findUnique({
+          where: { email: 'clipping@a3mercados.com.ar' },
+        });
+        if (!existing) {
+          const bcrypt = await import('bcryptjs');
+          const hash = await bcrypt.hash('A3clipping2024!', 12);
+          await prisma.clippingUser.create({
+            data: {
+              email: 'clipping@a3mercados.com.ar',
+              password: hash,
+              name: 'A3 Mercados',
+              company: 'A3 Mercados',
+            },
+          });
+          console.log('[Seed] ✅ Created default clipping user');
+        }
+      } catch (error) {
+        console.error('[Seed] ❌ Could not seed clipping user:', error instanceof Error ? error.message : error);
+      }
+    };
+
     // Run once after a short delay on startup (let the server fully initialize)
     setTimeout(() => {
       console.log('[Scheduler] Initial news processing after startup...');
+      seedClippingUser();
       runScheduledProcessing();
     }, 15_000); // 15 seconds after boot
 
