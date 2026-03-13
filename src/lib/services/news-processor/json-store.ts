@@ -60,6 +60,7 @@ export async function readStore(): Promise<NewsStore> {
     await ensureStoreRow();
     const meta = await prisma.processedNewsStore.findUnique({ where: { id: 'singleton' } });
     const rows = await prisma.processedNewsArticle.findMany({
+      where: { isDeleted: false },
       orderBy: { publishedAt: 'desc' },
     });
 
@@ -149,8 +150,9 @@ export async function upsertArticles(
   newArticles: ProcessedNews[],
   maxArticles: number = 30
 ): Promise<NewsStore> {
-  // 1. Fetch existing articles from DB
+  // 1. Fetch existing articles from DB (exclude soft-deleted)
   const existingRows = await prisma.processedNewsArticle.findMany({
+    where: { isDeleted: false },
     orderBy: { publishedAt: 'desc' },
   });
   const existing = existingRows.map(articleToProcessed);
@@ -399,13 +401,23 @@ export async function isStoreStale(): Promise<{ stale: boolean; minutesOld: numb
 
 export async function purgeOldArticles(maxAgeHours: number = 72): Promise<number> {
   const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
-  const result = await prisma.processedNewsArticle.deleteMany({
-    where: { publishedAt: { lt: cutoff } },
+  // Clipping articles have a much longer retention (30 days)
+  const clippingCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  // Purge non-clipping articles older than maxAgeHours
+  const portalResult = await prisma.processedNewsArticle.deleteMany({
+    where: { publishedAt: { lt: cutoff }, isClipping: false },
   });
-  if (result.count > 0) {
-    console.log(`[DBStore] Purged ${result.count} articles older than ${maxAgeHours}h`);
+  // Purge clipping articles older than 30 days
+  const clippingResult = await prisma.processedNewsArticle.deleteMany({
+    where: { publishedAt: { lt: clippingCutoff }, isClipping: true },
+  });
+
+  const total = portalResult.count + clippingResult.count;
+  if (total > 0) {
+    console.log(`[DBStore] Purged ${portalResult.count} portal articles (>${maxAgeHours}h) + ${clippingResult.count} clipping articles (>30d)`);
   }
-  return result.count;
+  return total;
 }
 
 export async function getClippingArticles(category?: string): Promise<ProcessedNews[]> {

@@ -9,7 +9,7 @@ import { verifyClippingToken } from '@/lib/services/clipping/jwt';
 import { prisma } from '@/lib/db/prisma';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 function getToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');
@@ -40,6 +40,11 @@ export async function POST(request: NextRequest) {
       function send(data: Record<string, unknown>) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
+
+      // Keep-alive ping every 10s to prevent proxy/CDN from closing the connection
+      const keepAlive = setInterval(() => {
+        try { controller.enqueue(encoder.encode(': keepalive\n\n')); } catch { /* stream closed */ }
+      }, 10_000);
 
       try {
         // Phase 1: Main news processing
@@ -135,6 +140,7 @@ export async function POST(request: NextRequest) {
           progress: 100,
         });
       } finally {
+        clearInterval(keepAlive);
         controller.close();
       }
     },
@@ -143,8 +149,7 @@ export async function POST(request: NextRequest) {
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
+      'Cache-Control': 'no-cache, no-transform',
     },
   });
 }
