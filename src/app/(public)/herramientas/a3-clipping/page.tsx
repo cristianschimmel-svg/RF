@@ -22,6 +22,7 @@ import { ClippingAnalyticsPanel } from '@/components/clipping/clipping-analytics
 import { ClippingSettingsPanel } from '@/components/clipping/clipping-settings';
 import { ClippingSmartSearch } from '@/components/clipping/clipping-smart-search';
 import { ClippingScanButton } from '@/components/clipping/clipping-scan-button';
+import { ClippingHistoricalSearch } from '@/components/clipping/clipping-historical-search';
 
 interface ClippingStats {
   total: number;
@@ -121,6 +122,29 @@ export default function ClippingDashboard() {
     router.push('/herramientas/a3-clipping/login');
   };
 
+  const handleDeleteArticle = useCallback(async (id: string) => {
+    try {
+      const res = await fetch('/api/clipping/news', {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      if (res.ok) {
+        const deleted = articles.find(a => a.id === id);
+        setArticles(prev => prev.filter(a => a.id !== id));
+        setStats(prev => {
+          const cat = deleted?.clippingCategory as keyof ClippingStats | undefined;
+          return {
+            ...prev,
+            total: prev.total - 1,
+            ...(cat && cat in prev ? { [cat]: prev[cat] - 1 } : {}),
+          };
+        });
+      }
+    } catch { /* silent */ }
+  }, [articles]);
+
   const today = new Date().toLocaleDateString('es-AR', {
     weekday: 'long',
     year: 'numeric',
@@ -181,6 +205,9 @@ export default function ClippingDashboard() {
                   fetchNews(activeCategory, currentPage);
                 }
               }}
+            />
+            <ClippingHistoricalSearch
+              onComplete={() => fetchNews(activeCategory, currentPage)}
             />
             <button
               onClick={() => fetchNews(activeCategory, currentPage)}
@@ -319,6 +346,7 @@ export default function ClippingDashboard() {
                 article={article}
                 isNew={newArticleIds.has(article.id)}
                 featured={article.clippingCategory === 'institucional'}
+                onDelete={handleDeleteArticle}
               />
             ))}
           </div>

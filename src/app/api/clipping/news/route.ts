@@ -158,6 +158,7 @@ export async function GET(request: NextRequest) {
         clippingCategory: a.clippingCategory,
         clippingScore: a.clippingScore,
         clippingReason: a.clippingReason,
+        clippingMatchContext: a.clippingMatchContext,
         priority: a.priority,
         publishedAt: a.publishedAt,
         processedAt: a.processedAt,
@@ -174,5 +175,37 @@ export async function GET(request: NextRequest) {
       { error: 'Error al obtener noticias del clipping' },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const token = getToken(request);
+  if (!token) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+  const { valid } = verifyClippingToken(token);
+  if (!valid) {
+    return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+  }
+
+  try {
+    const { ids } = await request.json();
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > 50) {
+      return NextResponse.json({ error: 'Se requiere un array de IDs (máx 50)' }, { status: 400 });
+    }
+
+    // Soft-delete: mark as deleted so cron dedup still finds them
+    const result = await prisma.processedNewsArticle.updateMany({
+      where: {
+        id: { in: ids },
+        isClipping: true,
+      },
+      data: { isDeleted: true },
+    });
+
+    return NextResponse.json({ success: true, deleted: result.count });
+  } catch (error) {
+    console.error('[ClippingNews] Delete error:', error);
+    return NextResponse.json({ error: 'Error al eliminar' }, { status: 500 });
   }
 }

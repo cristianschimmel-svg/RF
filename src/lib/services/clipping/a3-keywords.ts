@@ -344,5 +344,41 @@ export const ALL_CLIPPING_KEYWORDS = [
   ...DEFAULT_ECOSISTEMA,
 ];
 
+/**
+ * Find ALL matching keywords in article text across all categories.
+ * Returns unique keywords found, grouped by category.
+ */
+export function findAllMatchedKeywords(
+  title: string,
+  excerpt: string,
+  content?: string,
+  keywordsByCategory?: Record<ClippingCategory, string[]>,
+): { keyword: string; category: ClippingCategory }[] {
+  const rules = buildCategoryRules(keywordsByCategory || DEFAULT_KEYWORDS_BY_CATEGORY);
+
+  const text = `${title} ${excerpt} ${content || ''}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const found: { keyword: string; category: ClippingCategory }[] = [];
+  const seen = new Set<string>();
+
+  for (const rule of rules) {
+    for (const keyword of rule.keywords) {
+      const normalizedKw = keyword
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      if (!seen.has(normalizedKw) && text.includes(normalizedKw)) {
+        seen.add(normalizedKw);
+        found.push({ keyword, category: rule.category });
+      }
+    }
+  }
+
+  return found;
+}
+
 /** Keywords by category — hardcoded defaults (for backward compat) */
 export const KEYWORDS_BY_CATEGORY: Record<ClippingCategory, string[]> = DEFAULT_KEYWORDS_BY_CATEGORY;

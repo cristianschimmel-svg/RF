@@ -22,7 +22,7 @@ import {
   getStoreInfo,
   areTitlesSimilar
 } from './json-store';
-import { classifyForClipping, getKeywordsFromDB, type ClippingCategory } from '../clipping/a3-keywords';
+import { classifyForClipping, getKeywordsFromDB, extractKeywordContext, findAllMatchedKeywords, type ClippingCategory } from '../clipping/a3-keywords';
 import { validateClippingRelevance } from '../clipping/relevance-validator';
 import type { ProcessedNews, ProcessingResult } from './types';
 import type { ScrapedArticle } from '../scrapers/types';
@@ -505,13 +505,19 @@ async function processArticle(
   // Also check full article content — keywords in body matter too
   const clipping = classifyForClipping(processed.title, processed.header, processed.originalContent, dynamicKeywords);
   if (clipping.isClipping && clipping.category) {
+    // Find ALL matched keywords for the reason string
+    const allMatches = findAllMatchedKeywords(processed.title, processed.header, processed.originalContent, dynamicKeywords);
+    const allKwsStr = allMatches.map(m => `"${m.keyword}"`).join(', ');
+
     if (clipping.exempt) {
       // Exempt keywords (institucional, sector) → auto-include with max score
       processed.isClipping = true;
       processed.clippingCategory = clipping.category;
-      (processed as any).clippingScore = 10;
-      (processed as any).clippingReason = `Mención directa: "${clipping.matchedKeyword}"`;
-      console.log(`[NewsProcessor] 📋 A3 Clipping [${clipping.category}] EXEMPT: "${processed.title.slice(0, 50)}..." (kw: ${clipping.matchedKeyword})`);
+      processed.clippingScore = 10;
+      processed.clippingReason = allMatches.length > 1
+        ? `Mención directa: ${allKwsStr}`
+        : `Mención directa: "${clipping.matchedKeyword}"`;
+      console.log(`[NewsProcessor] 📋 A3 Clipping [${clipping.category}] EXEMPT: "${processed.title.slice(0, 50)}..." (kw: ${allKwsStr})`);
     } else {
       // Candidate keywords → validate with AI
       try {
@@ -524,8 +530,10 @@ async function processArticle(
         if (relevance.score >= 5) {
           processed.isClipping = true;
           processed.clippingCategory = relevance.category || clipping.category;
-          (processed as any).clippingScore = relevance.score;
-          (processed as any).clippingReason = relevance.reason;
+          processed.clippingScore = relevance.score;
+          processed.clippingReason = allMatches.length > 1
+            ? `${relevance.reason} | Keywords: ${allKwsStr}`
+            : relevance.reason;
           console.log(`[NewsProcessor] 📋 A3 Clipping [${relevance.category}] score=${relevance.score}: "${processed.title.slice(0, 50)}..." — ${relevance.reason}`);
         } else {
           console.log(`[NewsProcessor] 🚫 A3 Clipping REJECTED score=${relevance.score}: "${processed.title.slice(0, 50)}..." — ${relevance.reason}`);
@@ -534,10 +542,20 @@ async function processArticle(
         // On AI error, include conservatively
         processed.isClipping = true;
         processed.clippingCategory = clipping.category;
-        (processed as any).clippingScore = 6;
-        (processed as any).clippingReason = 'Incluido por error en validación IA';
+        processed.clippingScore = 6;
+        processed.clippingReason = allMatches.length > 1
+          ? `Incluido por error en validación IA | Keywords: ${allKwsStr}`
+          : 'Incluido por error en validación IA';
         console.log(`[NewsProcessor] 📋 A3 Clipping [${clipping.category}] AI-ERROR-FALLBACK: "${processed.title.slice(0, 50)}..."`);
       }
+    }
+
+    // Extract keyword context paragraph
+    if (processed.isClipping && clipping.matchedKeyword) {
+      processed.clippingMatchContext = extractKeywordContext(
+        processed.originalContent || `${processed.title} ${processed.header}`,
+        clipping.matchedKeyword,
+      ) ?? null;
     }
   }
 

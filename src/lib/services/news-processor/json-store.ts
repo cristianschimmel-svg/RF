@@ -36,6 +36,9 @@ function articleToProcessed(row: any): ProcessedNews {
     processingError: row.processingError ?? undefined,
     isClipping: row.isClipping ?? false,
     clippingCategory: row.clippingCategory ?? undefined,
+    clippingScore: row.clippingScore ?? null,
+    clippingReason: row.clippingReason ?? null,
+    clippingMatchContext: row.clippingMatchContext ?? null,
   };
 }
 
@@ -276,6 +279,9 @@ export async function upsertArticles(
           processingError: a.processingError ?? null,
           isClipping: a.isClipping ?? false,
           clippingCategory: a.clippingCategory ?? null,
+          clippingScore: a.clippingScore ?? null,
+          clippingReason: a.clippingReason ?? null,
+          clippingMatchContext: a.clippingMatchContext ?? null,
         },
         create: {
           id: a.id,
@@ -299,6 +305,9 @@ export async function upsertArticles(
           processingError: a.processingError ?? null,
           isClipping: a.isClipping ?? false,
           clippingCategory: a.clippingCategory ?? null,
+          clippingScore: a.clippingScore ?? null,
+          clippingReason: a.clippingReason ?? null,
+          clippingMatchContext: a.clippingMatchContext ?? null,
         },
       });
     }

@@ -384,11 +384,11 @@ export async function processTwitterSearch(
 
   // ── Step 4: Check DB for existing articles ─────
 
+  // Include deleted articles in dedup to avoid re-fetching them
   const existingArticles = await prisma.processedNewsArticle.findMany({
-    where: { isDeleted: false },
     select: { id: true, title: true, sourceUrl: true },
     orderBy: { publishedAt: 'desc' },
-    take: 2000,
+    take: 3000,
   });
 
   const existingUrls = new Set(existingArticles.map(a => a.sourceUrl));

@@ -32,6 +32,9 @@ export interface ProcessedNews {
   // Clipping (A3 Mercados)
   isClipping?: boolean;
   clippingCategory?: string;
+  clippingScore?: number | null;
+  clippingReason?: string | null;
+  clippingMatchContext?: string | null;
 }
 
 export interface NewsStore {

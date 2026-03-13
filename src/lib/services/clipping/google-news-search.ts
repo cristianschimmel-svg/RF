@@ -40,6 +40,10 @@ export interface GoogleNewsSearchResult {
 export interface GoogleNewsSearchOptions {
   /** Search all of 2026 (for initial load). Default: last 3 days. */
   fullHistory?: boolean;
+  /** Custom date range — overrides fullHistory when provided. Format: 'YYYY-MM-DD' */
+  dateFrom?: string;
+  /** Custom date range end. Format: 'YYYY-MM-DD' */
+  dateTo?: string;
   /** SSE progress callback */
   onProgress?: (message: string) => void;
 }
@@ -311,7 +315,44 @@ function inferSourceId(sourceName: string): string {
 // Compute date ranges
 // ──────────────────────────────────────────────
 
-function getDateRanges(fullHistory: boolean): { after: string; before: string; label: string }[] {
+function getDateRanges(fullHistory: boolean, dateFrom?: string, dateTo?: string): { after: string; before: string; label: string }[] {
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+  // Custom date range: split into monthly chunks for better Google News results
+  if (dateFrom && dateTo) {
+    const from = new Date(dateFrom + 'T00:00:00Z');
+    const to = new Date(dateTo + 'T00:00:00Z');
+    if (isNaN(from.getTime()) || isNaN(to.getTime()) || from > to) {
+      return [{ after: dateFrom, before: dateTo, label: `${dateFrom} — ${dateTo}` }];
+    }
+
+    const ranges: { after: string; before: string; label: string }[] = [];
+    let current = new Date(from);
+    while (current <= to) {
+      const monthStart = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), 1));
+      const monthEnd = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 0));
+
+      const effectiveStart = monthStart < from ? from : monthStart;
+      const effectiveEnd = monthEnd > to ? to : monthEnd;
+
+      // Google News uses exclusive after/before
+      const afterDate = new Date(effectiveStart);
+      afterDate.setUTCDate(afterDate.getUTCDate() - 1);
+      const beforeDate = new Date(effectiveEnd);
+      beforeDate.setUTCDate(beforeDate.getUTCDate() + 1);
+
+      const monthLabel = effectiveStart.toLocaleDateString('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+      ranges.push({
+        after: fmt(afterDate),
+        before: fmt(beforeDate),
+        label: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+      });
+
+      current = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 1));
+    }
+    return ranges;
+  }
+
   if (fullHistory) {
     return [
       { after: '2025-12-31', before: '2026-02-01', label: 'Enero 2026' },
@@ -325,7 +366,6 @@ function getDateRanges(fullHistory: boolean): { after: string; before: string; l
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
   return [{ after: fmt(threeDaysAgo), before: fmt(tomorrow), label: 'Últimos 3 días' }];
 }
 
@@ -336,9 +376,9 @@ function getDateRanges(fullHistory: boolean): { after: string; before: string; l
 export async function processGoogleNewsSearch(
   options: GoogleNewsSearchOptions = {},
 ): Promise<GoogleNewsSearchResult> {
-  const { fullHistory = false, onProgress } = options;
+  const { fullHistory = false, dateFrom, dateTo, onProgress } = options;
   const startTime = Date.now();
-  const dateRanges = getDateRanges(fullHistory);
+  const dateRanges = getDateRanges(fullHistory, dateFrom, dateTo);
 
   // Load dynamic keywords from DB
   const dynamicKeywords = await getKeywordsFromDB();
@@ -352,7 +392,10 @@ export async function processGoogleNewsSearch(
   const clippingQueries = buildDynamicQueries(dynamicKeywords as Record<string, string[]>);
   const queries = clippingQueries.length > 0 ? clippingQueries : FALLBACK_QUERIES;
 
-  log(`Iniciando búsqueda (${fullHistory ? 'histórico completo' : 'incremental 3 días'}) con ${queries.length} queries...`);
+  const modeLabel = dateFrom && dateTo
+    ? `rango personalizado ${dateFrom} a ${dateTo}`
+    : fullHistory ? 'histórico completo' : 'incremental 3 días';
+  log(`Iniciando búsqueda (${modeLabel}) con ${queries.length} queries...`);
 
   // ── Step 1: Fetch all queries ──────────────────
 
@@ -392,12 +435,11 @@ export async function processGoogleNewsSearch(
 
   // ── Step 3: Check DB for existing articles ─────
 
-  // Load recent titles from DB for fuzzy matching
+  // Load recent titles from DB for fuzzy matching (include deleted to avoid re-fetching)
   const existingArticles = await prisma.processedNewsArticle.findMany({
-    where: { isDeleted: false },
     select: { id: true, title: true, sourceUrl: true },
     orderBy: { publishedAt: 'desc' },
-    take: 2000,
+    take: 3000,
   });
 
   const existingUrls = new Set(existingArticles.map(a => a.sourceUrl));

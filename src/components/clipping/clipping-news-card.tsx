@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Clock, ExternalLink, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Clock, ExternalLink, ChevronRight, TrendingUp, TrendingDown, Minus, Trash2 } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 
 interface ClippingArticle {
@@ -77,7 +77,7 @@ function cleanText(html: string): string {
     .trim();
 }
 
-export function ClippingNewsCard({ article, isNew, featured }: { article: ClippingArticle; isNew?: boolean; featured?: boolean }) {
+export function ClippingNewsCard({ article, isNew, featured, onDelete }: { article: ClippingArticle; isNew?: boolean; featured?: boolean; onDelete?: (id: string) => void }) {
   const catConfig = CLIPPING_CATEGORIES[article.clippingCategory || ''] || CLIPPING_CATEGORIES.ecosistema;
   const sentiment = SENTIMENT_CONFIG[article.aiSentiment || 'neutral'] || SENTIMENT_CONFIG.neutral;
   const SentimentIcon = sentiment.icon;
@@ -86,10 +86,19 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
   const cleanTitle = cleanText(article.title);
 
   return (
-    <div className={`bg-surface-elevated dark:bg-[#111] border rounded-xl ${featured ? 'p-5' : 'p-4'} hover:border-indigo-500/30 transition-all group ${
+    <div className={`relative bg-surface-elevated dark:bg-[#111] border rounded-xl ${featured ? 'p-5' : 'p-4'} hover:border-indigo-500/30 transition-all group ${
       featured ? 'border-blue-500/40 ring-1 ring-blue-500/20' :
       isNew ? 'border-indigo-500/40 ring-1 ring-indigo-500/20' : 'border-[var(--border)]'
     }`}>
+      {onDelete && (
+        <button
+          onClick={() => onDelete(article.id)}
+          className="absolute top-3 right-3 p-1 rounded-lg text-text-disabled dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+          title="Eliminar del clipping"
+        >
+          <Trash2 className="w-[18px] h-[18px]" />
+        </button>
+      )}
       <div className="flex items-start gap-4">
         {/* Left: sentiment indicator */}
         <div className={`flex-shrink-0 ${featured ? 'w-12 h-12' : 'w-10 h-10'} rounded-lg ${sentiment.bg} flex items-center justify-center`}>
@@ -133,8 +142,8 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
 
           {/* Relevance score + reason */}
           {article.clippingScore != null && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold ${
+            <div className="flex items-start gap-2 mb-2">
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold flex-shrink-0 ${
                 article.clippingScore >= 8 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                 article.clippingScore >= 5 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
                 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -142,7 +151,7 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
                 {article.clippingScore}/10
               </span>
               {article.clippingReason && (
-                <span className="text-2xs text-text-muted dark:text-slate-500 italic line-clamp-1">
+                <span className="text-2xs text-text-muted dark:text-slate-500 italic">
                   {cleanText(article.clippingReason || '')}
                 </span>
               )}
@@ -151,7 +160,7 @@ export function ClippingNewsCard({ article, isNew, featured }: { article: Clippi
 
           {/* AI Relevance */}
           {article.aiRelevance && (
-            <p className="text-2xs text-indigo-500/70 dark:text-indigo-300/70 italic mb-2 line-clamp-1">
+            <p className="text-2xs text-indigo-500/70 dark:text-indigo-300/70 italic mb-2 text-justify leading-relaxed">
               💡 {article.aiRelevance}
             </p>
           )}
