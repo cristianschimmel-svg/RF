@@ -353,7 +353,7 @@ export async function getNewsArticle(slug: string): Promise<NewsWithAI | null> {
   }
 
   // Second attempt: it's not an editorial article, so we get external articles
-  // Get from processed store first
+  // Get from processed store first (already excludes clipping articles)
   const processedNews = await getProcessedNews();
   let article: NewsArticle | undefined;
   
