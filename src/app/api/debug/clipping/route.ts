@@ -41,13 +41,35 @@ export async function GET(request: NextRequest) {
       bySource[src] = (bySource[src] || 0) + 1;
     }
 
+    // Check how many are isProcessed
+    const notProcessed = clippingArticles.filter(a => !a.isProcessed).length;
+
+    // Get ClippingUser preferences to debug filters
+    const clippingUsers = await prisma.clippingUser.findMany({
+      select: {
+        email: true,
+        company: true,
+        customKeywords: true,
+        enabledSources: true,
+        active: true,
+      },
+    });
+
     return NextResponse.json({
       totalArticlesInDB: totalAll,
       clippingActive: totalClipping,
       clippingDeleted: deletedClipping,
       nonClipping: totalAll - totalClipping - deletedClipping,
+      notProcessed,
       byClippingCategory: byCategory,
       bySource: bySource,
+      clippingUsers: clippingUsers.map(u => ({
+        email: u.email,
+        company: u.company,
+        active: u.active,
+        customKeywords: u.customKeywords,
+        enabledSources: u.enabledSources,
+      })),
       recent: clippingArticles.slice(0, 20).map(a => ({
         id: a.id,
         title: a.title?.slice(0, 80),
