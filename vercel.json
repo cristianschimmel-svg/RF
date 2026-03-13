@@ -26,6 +26,9 @@
     },
     "src/app/api/news/processed/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/clipping/scan/route.ts": {
+      "maxDuration": 120
     }
   }
 }

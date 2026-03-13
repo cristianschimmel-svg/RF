@@ -43,7 +43,11 @@ interface ExternalNewsLiveProps {
  * Client component that auto-refreshes external news every hour
  */
 export function ExternalNewsLive({ initialArticles }: ExternalNewsLiveProps) {
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  
+  useEffect(() => {
+    setLastUpdate(new Date());
+  }, []);
   
   const { data, isValidating, mutate } = useSWR<ExternalNewsResponse>(
     '/api/news/processed?limit=30',
@@ -121,7 +125,7 @@ export function ExternalNewsLive({ initialArticles }: ExternalNewsLiveProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs text-text-muted">
             <Clock className="w-3 h-3" />
-            <span>Actualizado {formatRelativeTime(lastUpdate.toISOString())}</span>
+            <span>Actualizado {lastUpdate ? formatRelativeTime(lastUpdate.toISOString()) : 'ahora'}</span>
           </div>
           <button
             onClick={handleRefresh}

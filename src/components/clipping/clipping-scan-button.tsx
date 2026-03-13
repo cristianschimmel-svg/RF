@@ -51,6 +51,7 @@ export function ClippingScanButton({ onComplete }: ClippingScanButtonProps) {
     try {
       const res = await fetch('/api/clipping/scan', {
         method: 'POST',
+        credentials: 'same-origin',
         signal: controller.signal,
       });
 

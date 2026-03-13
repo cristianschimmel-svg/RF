@@ -31,6 +31,7 @@ export function Header() {
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
+    document.documentElement.classList.toggle('dark', newMode);
     setThemePref(newMode ? 'dark' : 'light');
   };
 
