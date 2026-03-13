@@ -62,19 +62,31 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter by enabled sources (if user has configured any)
+    // Google News articles (sourceId starts with "google-") always pass — they come
+    // from many different outlets whose sourceName won't match the curated list.
     if (userSources.length > 0) {
-      where.sourceName = { in: userSources };
+      where.OR = [
+        { sourceName: { in: userSources } },
+        { sourceId: { startsWith: 'google-' } },
+      ];
     }
 
     // Filter by custom keywords (if user has configured any)
     if (userKeywords.length > 0) {
-      where.OR = userKeywords.map(kw => ({
+      const kwFilter = userKeywords.map(kw => ({
         OR: [
           { title: { contains: kw, mode: 'insensitive' } },
           { header: { contains: kw, mode: 'insensitive' } },
           { aiSummary: { contains: kw, mode: 'insensitive' } },
         ],
       }));
+      // Combine with existing OR (from sources) using AND
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: kwFilter }];
+        delete where.OR;
+      } else {
+        where.OR = kwFilter;
+      }
     }
 
     // Text search filter (q param)
@@ -87,8 +99,9 @@ export async function GET(request: NextRequest) {
           { originalContent: { contains: searchQuery, mode: 'insensitive' as const } },
         ],
       };
-      if (where.OR) {
-        // Must match at least one user keyword AND the search query
+      if (where.AND) {
+        (where.AND as unknown[]).push(searchFilter);
+      } else if (where.OR) {
         where.AND = [{ OR: where.OR }, searchFilter];
         delete where.OR;
       } else {
@@ -108,24 +121,12 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    // Stats — always unfiltered by keywords for the category breakdown
+    // Stats — unfiltered for the category breakdown (show all clipping articles)
     const statsWhere: Record<string, unknown> = {
       isClipping: true,
       isDeleted: false,
       isProcessed: true,
     };
-    if (userSources.length > 0) {
-      statsWhere.sourceName = { in: userSources };
-    }
-    if (userKeywords.length > 0) {
-      statsWhere.OR = userKeywords.map(kw => ({
-        OR: [
-          { title: { contains: kw, mode: 'insensitive' } },
-          { header: { contains: kw, mode: 'insensitive' } },
-          { aiSummary: { contains: kw, mode: 'insensitive' } },
-        ],
-      }));
-    }
 
     const allForStats = await prisma.processedNewsArticle.findMany({
       where: statsWhere as any,
