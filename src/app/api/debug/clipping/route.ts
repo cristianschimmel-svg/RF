@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         sourceId: true,
         isProcessed: true,
         publishedAt: true,
-        createdAt: true,
+        processedAt: true,
         processingError: true,
       },
       orderBy: { publishedAt: 'desc' },
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         category: a.category,
         source: a.sourceId,
         publishedAt: a.publishedAt,
-        createdAt: a.createdAt,
+        processedAt: a.processedAt,
         error: a.processingError?.slice(0, 80) ?? null,
       })),
     });
