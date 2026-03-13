@@ -35,18 +35,23 @@ export async function POST(request: NextRequest) {
   const existingIdSet = new Set(existingIds.map(a => a.id));
 
   const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      function send(data: Record<string, unknown>) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-      }
+  // Use TransformStream so the readable side is returned immediately,
+  // preventing Vercel from buffering the entire response.
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
 
-      // Keep-alive ping every 10s to prevent proxy/CDN from closing the connection
-      const keepAlive = setInterval(() => {
-        try { controller.enqueue(encoder.encode(': keepalive\n\n')); } catch { /* stream closed */ }
-      }, 10_000);
+  // Fire-and-forget: run the scan pipeline writing progress events
+  (async () => {
+    function send(data: Record<string, unknown>) {
+      writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)).catch(() => {});
+    }
 
-      try {
+    // Keep-alive ping every 10s to prevent proxy/CDN from closing the connection
+    const keepAlive = setInterval(() => {
+      writer.write(encoder.encode(': keepalive\n\n')).catch(() => {});
+    }, 10_000);
+
+    try {
         // Phase 1: Main news processing
         send({ phase: 'rss', message: 'Obteniendo noticias de feeds RSS...', progress: 5 });
 
@@ -141,15 +146,16 @@ export async function POST(request: NextRequest) {
         });
       } finally {
         clearInterval(keepAlive);
-        controller.close();
+        writer.close().catch(() => {});
       }
-    },
-  });
+    })();
 
-  return new Response(stream, {
+  return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
+      'Connection': 'keep-alive',
     },
   });
 }
