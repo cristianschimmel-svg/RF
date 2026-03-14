@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { formatPercent } from '@/lib/utils';
 import type { DollarQuote, Indicator } from '@/types';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 
 interface MarketBarData {
   dollarQuotes: DollarQuote[];
@@ -41,16 +42,20 @@ const dollarLabels: Record<string, string> = {
   ccl: 'CCL',
 };
 
-function BarItem({ label, value, changePercent, sub }: {
+function BarItem({ label, value, changePercent, sub, href }: {
   label: string;
   value: string;
   changePercent: number;
   sub?: string;
+  href?: string;
 }) {
   const trend = getTrend(changePercent);
 
+  const Wrapper = href ? Link : 'div';
+  const wrapperProps = href ? { href } : {};
+
   return (
-    <div className="flex items-center gap-2.5 px-3 py-1.5 bg-surface-elevated rounded border border-[var(--border-muted)] min-w-[120px]">
+    <Wrapper {...wrapperProps as any} className={`flex items-center gap-2.5 px-3 py-1.5 bg-surface-elevated rounded border border-[var(--border-muted)] min-w-[120px]${href ? ' cursor-pointer hover:border-accent/40 hover:bg-accent/5 transition-colors' : ''}`}>
       <div className="flex flex-col min-w-0">
         <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)] leading-none">
           {label}
@@ -70,7 +75,7 @@ function BarItem({ label, value, changePercent, sub }: {
           <span className="text-[9px] text-[var(--text-disabled)] leading-none mt-0.5 whitespace-nowrap">{sub}</span>
         )}
       </div>
-    </div>
+    </Wrapper>
   );
 }
 
@@ -118,6 +123,7 @@ export function MarketBar({ initialData, refreshInterval = 60000 }: MarketBarPro
               value={`$${fmt(q.sell)}`}
               changePercent={q.changePercent}
               sub={`C $${fmt(q.buy)} / V $${fmt(q.sell)}`}
+              href="/indicadores/dolar"
             />
           ))}
 
@@ -126,6 +132,7 @@ export function MarketBar({ initialData, refreshInterval = 60000 }: MarketBarPro
               label="MERVAL"
               value={`${fmt(mervalIndex.value)} pts`}
               changePercent={mervalIndex.changePercent}
+              href="/indicadores/dolar"
             />
           )}
 
@@ -134,6 +141,7 @@ export function MarketBar({ initialData, refreshInterval = 60000 }: MarketBarPro
               label="Riesgo País"
               value={`${fmt(riesgoPais.value)} pb`}
               changePercent={riesgoPais.changePercent}
+              href="/indicadores/dolar"
             />
           )}
 

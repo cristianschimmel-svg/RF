@@ -58,34 +58,85 @@ interface ClippingQuery {
 }
 
 /**
- * Build Google News search queries from institucional + sector keywords.
+ * Build Google News search queries from ALL keyword categories.
+ * - institucional + sector: searched individually (EXEMPT, score 10)
+ * - producto: grouped into thematic OR queries (CANDIDATE, needs AI validation)
+ *
  * Groups accent variants (e.g. "andrés ponte" / "andres ponte") into OR queries.
  * Single-word keywords shorter than 4 chars are skipped (too generic for Google).
  */
 function buildDynamicQueries(keywords: Record<string, string[]>): ClippingQuery[] {
-  // Search Google News for institucional + sector keywords (both are EXEMPT categories)
+  const queries: ClippingQuery[] = [];
+
+  // ── 1. institucional + sector: one query per keyword (EXEMPT) ──
   const institucional = keywords.institucional || [];
   const sector = keywords.sector || [];
-  const allKws = [...institucional, ...sector];
+  const exemptKws = [...institucional, ...sector];
 
-  // Group accent variants: normalize to base form, collect originals
-  const groups = new Map<string, Set<string>>();
-  for (const kw of allKws) {
+  const exemptGroups = new Map<string, Set<string>>();
+  for (const kw of exemptKws) {
     const base = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    // Skip very short single-word keywords (too generic for Google search)
     if (!base.includes(' ') && base.length < 4) continue;
-    if (!groups.has(base)) groups.set(base, new Set());
-    groups.get(base)!.add(kw);
+    if (!exemptGroups.has(base)) exemptGroups.set(base, new Set());
+    exemptGroups.get(base)!.add(kw);
   }
 
-  const queries: ClippingQuery[] = [];
-  const entries = Array.from(groups.entries());
-  for (const entry of entries) {
-    const arr = Array.from(entry[1]);
+  for (const [, variants] of Array.from(exemptGroups.entries())) {
+    const arr = Array.from(variants);
     const label = arr[0];
-    // Build OR query with exact-match quotes
     const query: string = arr.map(v => `"${v}"`).join(' OR ');
     queries.push({ label, query });
+  }
+
+  // ── 2. producto: group into thematic batches to limit API calls ──
+  const producto = keywords.producto || [];
+  if (producto.length > 0) {
+    // Group producto keywords by theme for efficient Google News queries
+    const productoThemes: { label: string; match: RegExp; suffix?: string }[] = [
+      { label: 'Futuros agrícolas', match: /futuros de (soja|ma[ií]z|trigo)|futuros agr[ií]colas|mercado de granos|mercado granario/i },
+      { label: 'Futuros & derivados', match: /mercado de futuros|contratos de futuros|derivados financieros|futuros financieros|opciones financieras|mercado de opciones/i },
+      { label: 'Dólar futuro & cobertura', match: /d[oó]lar futuro|futuros de d[oó]lar|cobertura cambiaria|cobertura de precios/i },
+      { label: 'Commodities & agro', match: /commodities|precio de soja|precio del trigo|precio del ma[ií]z|exportaciones agr[ií]colas|agrod[oó]lar|d[oó]lar agro|retenciones/i },
+      { label: 'Renta fija & tasas', match: /lecaps?|plazo fijo|tasa de inter[eé]s|bonos en d[oó]lares|renta fija|licitaciones/i },
+    ];
+
+    for (const theme of productoThemes) {
+      const matching = producto.filter(kw => theme.match.test(kw));
+      if (matching.length === 0) continue;
+
+      // Deduplicate accent variants
+      const groups = new Map<string, Set<string>>();
+      for (const kw of matching) {
+        const base = kw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        if (!groups.has(base)) groups.set(base, new Set());
+        groups.get(base)!.add(kw);
+      }
+
+      // Pick one variant per base form, max 4 per query to avoid too-long URLs
+      const variants = Array.from(groups.values()).map(set => Array.from(set)[0]);
+      const chunks = [];
+      for (let i = 0; i < variants.length; i += 4) {
+        chunks.push(variants.slice(i, i + 4));
+      }
+
+      for (const chunk of chunks) {
+        const query = chunk.map(v => `"${v}"`).join(' OR ') + ' Argentina';
+        queries.push({ label: `Producto: ${theme.label}`, query });
+      }
+    }
+
+    // Catch any producto keywords not matched by themes
+    const allThemed = new Set<string>();
+    for (const theme of productoThemes) {
+      for (const kw of producto) {
+        if (theme.match.test(kw)) allThemed.add(kw);
+      }
+    }
+    const unthemed = producto.filter(kw => !allThemed.has(kw));
+    if (unthemed.length > 0) {
+      const query = unthemed.slice(0, 4).map(v => `"${v}"`).join(' OR ') + ' Argentina';
+      queries.push({ label: 'Producto: otros', query });
+    }
   }
 
   return queries;
@@ -93,17 +144,24 @@ function buildDynamicQueries(keywords: Record<string, string[]>): ClippingQuery[
 
 // Fallback hardcoded queries (used if DB is empty)
 const FALLBACK_QUERIES: ClippingQuery[] = [
+  // Institucional
   { label: 'A3 Mercados', query: '"A3 Mercados"' },
   { label: 'Robert Olson', query: '"Robert Olson"' },
   { label: 'Andrés/Andres Ponte', query: '"Andrés Ponte" OR "Andres Ponte"' },
   { label: 'Diego Cosentino', query: '"Diego Cosentino"' },
   { label: 'Mercado a término', query: '"mercado a término" OR "mercado a termino"' },
+  // Sector
   { label: 'rofex', query: '"rofex"' },
   { label: 'matba rofex', query: '"matba rofex"' },
   { label: 'bolsa comercio rosario', query: '"bolsa de comercio de rosario"' },
   { label: 'merval', query: '"merval"' },
   { label: 'MAE mercados', query: '"MAE" mercados argentina' },
-  { label: 'derivados financieros', query: '"derivados financieros" argentina' },
+  // Producto
+  { label: 'Producto: Futuros agrícolas', query: '"futuros de soja" OR "futuros de maíz" OR "futuros de trigo" OR "futuros agrícolas" Argentina' },
+  { label: 'Producto: Futuros & derivados', query: '"mercado de futuros" OR "derivados financieros" OR "contratos de futuros" Argentina' },
+  { label: 'Producto: Dólar futuro', query: '"dólar futuro" OR "futuros de dólar" OR "cobertura cambiaria" Argentina' },
+  { label: 'Producto: Commodities & agro', query: '"commodities" OR "precio de soja" OR "exportaciones agrícolas" Argentina' },
+  { label: 'Producto: Renta fija & tasas', query: '"lecap" OR "plazo fijo" OR "bonos en dólares" OR "renta fija" Argentina' },
 ];
 
 // ──────────────────────────────────────────────
@@ -388,7 +446,7 @@ export async function processGoogleNewsSearch(
     onProgress?.(msg);
   };
 
-  // Build dynamic queries from institucional + sector keywords
+  // Build dynamic queries from all keyword categories
   const clippingQueries = buildDynamicQueries(dynamicKeywords as Record<string, string[]>);
   const queries = clippingQueries.length > 0 ? clippingQueries : FALLBACK_QUERIES;
 

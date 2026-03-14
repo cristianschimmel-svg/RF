@@ -86,47 +86,7 @@ export default async function HomePage() {
               <LatestNewsSection articles={externalNews} showViewAll={true} />
             )}
             
-            {/* 3. Dollar Section - Tipo de Cambio */}
-            <IndicatorSection
-              title="Tipo de Cambio"
-              icon={<DollarSign className="w-4 h-4" />}
-              headerAction={
-                <div className="flex items-center gap-2">
-                  {overview.dollarMetrics.brechaBlue && (
-                    <Badge variant="accent" size="sm">
-                      Brecha {overview.dollarMetrics.brechaBlue.toFixed(1)}%
-                    </Badge>
-                  )}
-                  <Link
-                    href="/indicadores/dolar"
-                    className="text-xs text-accent hover:text-accent-dark flex items-center gap-1"
-                  >
-                    Ver más
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              }
-            >
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {overview.dollarQuotes.length > 0 ? overview.dollarQuotes.map((quote) => (
-                  <MiniDollarCard
-                    key={quote.type}
-                    name={quote.name.replace('Dólar ', '')}
-                    buy={quote.buy}
-                    sell={quote.sell}
-                    change={quote.change}
-                    changePercent={quote.changePercent}
-                  />
-                )) : (
-                  <p className="col-span-full text-sm text-text-muted dark:text-gray-400 text-center py-4">
-                    <AlertTriangle className="w-4 h-4 inline mr-1" />
-                    Sin datos de cotizaciones disponibles
-                  </p>
-                )}
-              </div>
-            </IndicatorSection>
-
-            {/* 4. Argentina Stock Market - MERVAL (Bolsa de Valores) */}
+            {/* 3. Argentina Stock Market - MERVAL (Bolsa de Valores) */}
             <ArgentinaMarketWidget 
               initialData={marketSummary}
               initialHistorical={mervalHistorical}
